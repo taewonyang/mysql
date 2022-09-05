@@ -8,7 +8,7 @@ class App() :
 
         menu_frame = LabelFrame(self.window, text='Menu')
         menu_frame.pack(padx=7)
-        vendor_register_btn = Button(menu_frame, text='구매처 등록', command=self.go_vendor_register)
+        vendor_register_btn = Button(menu_frame, text='구매처 등록/조회', command=self.go_vendor_register)
         vendor_register_btn.pack(side='left', padx=5, pady=5, ipady=3, ipadx=3)
         material_list_btn = Button(menu_frame, text='원자재 입고 리스트 ', command=self.go_material_list)
         material_list_btn.pack(side='left', padx=5, pady=5, ipady=3, ipadx=3)
