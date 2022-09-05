@@ -34,21 +34,21 @@ class Register_window():
         tree.configure(yscrollcommand=scrollbar.set)
 
     def tree_data_view(self):
-        db_filename = 'BOM.db'
-        cur_dir = os.getcwd()
-        file_path = cur_dir+'\\'+db_filename
-        if os.path.isfile(file_path) == True :
-            conn = sqlite3.connect('./BOM.db')
-            cur = conn.cursor()
+        conn = sqlite3.connect('./BOM.db')
+        cur = conn.cursor()
+        list_table = cur.execute('''
+        select name from sqlite_master where type='table' and name='vendor'
+        ''').fetchall()
+        print(list_table)
+        if list_table == [] :
+            print('테이블이 없습니다.')
+        else :
             cur.execute('select * from vendor')
             rs = cur.fetchall()
-
             for i in tree.get_children():
                 tree.delete(i)
             for contact in rs:
                 tree.insert('', END, values=contact)
-        else:
-            print('파일이 없습니다.')
 
     def layout(self):
         # 검색 폼
@@ -57,20 +57,26 @@ class Register_window():
         search_lb = Label(searchFrame, text='검색')
         search_lb.pack(side='left', padx=3)
 
-        name_opt = []
-        current_opt = []
-        document_opt=[]
         conn = sqlite3.connect('./BOM.db')
         cur = conn.cursor()
-        cur.execute('select * from vendor')
-        rs = cur.fetchall()
-        for row in rs :
-            if (row[0] in name_opt) == False :
-                name_opt.append(row[0])
-            if (row[1] in current_opt) == False :
-                current_opt.append(row[1])
-            if (row[2] in document_opt) == False :
-                document_opt.append(row[2])
+        list_table = cur.execute('''
+                select name from sqlite_master where type='table' and name='vendor'
+                ''').fetchall()
+        name_opt = []
+        current_opt = []
+        document_opt = []
+        if list_table == []:
+            print('테이블이 없습니다.')
+        else :
+            cur.execute('select * from vendor')
+            rs = cur.fetchall()
+            for row in rs :
+                if (row[0] in name_opt) == False :
+                    name_opt.append(row[0])
+                if (row[1] in current_opt) == False :
+                    current_opt.append(row[1])
+                if (row[2] in document_opt) == False :
+                    document_opt.append(row[2])
 
         nameSearch_cmb = ttk.Combobox(searchFrame, height=5, width=26, values=name_opt)
         currentSearch_cmb = ttk.Combobox(searchFrame, height=5, width=4, values=current_opt)
@@ -82,7 +88,7 @@ class Register_window():
         # 등록btn
         btn_frmae = Frame(self.window)
         btn_frmae.place(x=460, y=60)
-        new_btn = Button(btn_frmae, text='업체 등록', command=self.create_register_widget())
+        new_btn = Button(btn_frmae, text='업체 등록')
         new_btn.pack(padx=5, pady=5)
         modify_btn = Button(btn_frmae, text='업체 수정')
         modify_btn.pack(padx=5, pady=5)
@@ -138,4 +144,3 @@ class Register_window():
 
             msgbox.showinfo('등록완료!', '구매처 등록을 완료했습니다.')
             self.tree_data_view()
-
