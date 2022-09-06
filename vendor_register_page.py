@@ -39,7 +39,6 @@ class Register_window():
         list_table = cur.execute('''
         select name from sqlite_master where type='table' and name='vendor'
         ''').fetchall()
-        print(list_table)
         if list_table == [] :
             print('테이블이 없습니다.')
         else :
@@ -113,25 +112,39 @@ class Register_window():
             cur.execute(''' 
              CREATE TABLE IF NOT EXISTS vendor(vendor text, current text, document text)
              ''')
-            # insert into table
+            conn.commit()
+            conn.close()
+
+            # insert data into table
+            conn = sqlite3.connect('./BOM.db')
+            cur = conn.cursor()
             cur.execute('select * from vendor')
             rs = cur.fetchall()
-            for row in rs :
-                data = (name_cmb.get(), current_cmb.get().upper(), document_cmb.get())
-                if row == tuple(data) :
-                    msgbox.showerror('중복오류!', '이미 존재하는 데이터입니다.\n다시 입력해주세요.')
-                else :
-                    insert_sql = 'INSERT OR IGNORE INTO vendor values(?,?,?)'
-                    cur.execute(insert_sql, (name_cmb.get(), current_cmb.get().upper(), document_cmb.get()))
-                    msgbox.showinfo('등록완료!', '구매처 등록을 완료했습니다.')
-                    conn.commit()
-                    conn.close()
 
-                    name_cmb.set('')
-                    current_cmb.set('')
-                    document_cmb.set('')
+            # 중복여부 체크
+            data = (name_cmb.get(), current_cmb.get().upper(), document_cmb.get())
+            overlap_check = []
+            if rs != [] : #DB에 데이터가 있다면
+                for row in rs:
+                    if row == tuple(data):
+                        overlap_check.append('ok')
+                        break
+            # (데이터O / 중복O)
+            if overlap_check != [] :
+                msgbox.showerror('중복오류!', '이미 존재하는 데이터입니다.\n다시 입력해주세요.')
+            # (데이터O / 중복X) or (데이터X)
+            else :
+                insert_sql = 'INSERT OR IGNORE INTO vendor values(?,?,?)'
+                cur.execute(insert_sql, (name_cmb.get(), current_cmb.get().upper(), document_cmb.get()))
+                msgbox.showinfo('등록완료!', '구매처 등록을 완료했습니다.')
+                conn.commit()
+                conn.close()
 
-                    self.tree_data_view()
+                name_cmb.set('')
+                current_cmb.set('')
+                document_cmb.set('')
+
+                self.tree_data_view()
 
     def remove(self):
         conn = sqlite3.connect('./BOM.db')
@@ -140,7 +153,7 @@ class Register_window():
                 select name from sqlite_master where type='table' and name='vendor'
                 ''').fetchall()
         if list_table == []:
-            print('테이블이 없습니다.')
+            msgbox.showerror('선택 오류', '삭제할 데이터를 선택해주세요.')
         else:
             selectedItem = tree.focus()
             getValue = tree.item(selectedItem).get('values')
