@@ -7,7 +7,7 @@ import sqlite3
 class Register_window():
     def __init__(self, window):
         self.window = window
-        self.window.geometry('580x600')
+        self.window.geometry('600x600')
 
         self.create_tree_widget()
         self.tree_data_view()
@@ -51,12 +51,8 @@ class Register_window():
                 tree.insert('', END, values=contact)
 
     def layout(self):
+        global name_cmb, current_cmb, document_cmb
         # 검색 폼
-        searchFrame = Frame(self.window)
-        searchFrame.place(x=10 ,y=490)
-        search_lb = Label(searchFrame, text='검색')
-        search_lb.pack(side='left', padx=3)
-
         conn = sqlite3.connect('./BOM.db')
         cur = conn.cursor()
         list_table = cur.execute('''
@@ -77,58 +73,39 @@ class Register_window():
                     current_opt.append(row[1])
                 if (row[2] in document_opt) == False :
                     document_opt.append(row[2])
+        name_opt.sort()
+        current_opt.sort()
+        document_opt.sort()
 
-        nameSearch_cmb = ttk.Combobox(searchFrame, height=5, width=26, values=name_opt)
-        currentSearch_cmb = ttk.Combobox(searchFrame, height=5, width=4, values=current_opt)
-        documentSearch_cmb = ttk.Combobox(searchFrame, height=5, width=11, values=document_opt)
-        nameSearch_cmb.pack(side='left', padx=4)
-        currentSearch_cmb.pack(side='left', padx=4)
-        documentSearch_cmb.pack(side='left', padx=4)
+        searchFrame = Frame(self.window)
+        searchFrame.place(x=45, y=490)
+        name_cmb = ttk.Combobox(searchFrame, height=5, width=26, values=name_opt)
+        current_cmb = ttk.Combobox(searchFrame, height=5, width=4, values=current_opt)
+        document_cmb = ttk.Combobox(searchFrame, height=5, width=11, values=document_opt)
+        name_cmb.pack(side='left', padx=4)
+        current_cmb.pack(side='left', padx=4)
+        document_cmb.pack(side='left', padx=4)
 
-        # 등록btn
-        btn_frmae = Frame(self.window)
-        btn_frmae.place(x=460, y=60)
-        new_btn = Button(btn_frmae, text='업체 등록')
-        new_btn.pack(padx=5, pady=5)
-        modify_btn = Button(btn_frmae, text='업체 수정')
+        # 버튼
+        btn_frame = Frame(self.window)
+        btn_frame.place(x=485, y=60)
+        modify_btn = Button(btn_frame, text='거래처\n 수정 ')
         modify_btn.pack(padx=5, pady=5)
-        del_btn = Button(btn_frmae, text='업체 삭제')
+        del_btn = Button(btn_frame, text='거래처\n 삭제 ', command=self.remove)
         del_btn.pack(padx=5, pady=5)
 
+        search_btn = Button(self.window, text='조회')
+        search_btn.place(x=425, y=485)
+        new_btn = Button(self.window, text='거래처\n 등록 ', command=self.regist)
+        new_btn.place(x=485, y=480)
 
-    def create_register_widget(self):
-        global vendor_name_txt, currency_cmb, document_cmb, new_win
-        new_win = Toplevel()
-        new_win.geometry('400x300')
-        new_win.resizable(False, False)
-
-        register_frame = LabelFrame(new_win, text='구매처 입력')
-        register_frame.place(x=30, y=70)
-
-        vendor_name_lb = Label(register_frame, text='업체명')
-        vendor_name_lb.grid(row=0, column=0, sticky='w')
-        vendor_name_txt = Entry(register_frame, width=30)
-        vendor_name_txt.grid(row=0, column=1, sticky='w')
-        currency_lb = Label(register_frame, text='통화')
-        currency_lb.grid(row=1, column=0,sticky='w')
-        currency_opt = ['KRW', 'CNY', 'RMB', 'USD', 'EUR']
-        currency_cmb = ttk.Combobox(register_frame, state='readonly', values=currency_opt, height=5, width=5)
-        currency_cmb.current(0)
-        currency_cmb.grid(row=1, column=1,sticky='w')
-
-        document_lb = Label(register_frame, text='구매입증서류')
-        document_lb.grid(row=2, column=0,sticky='w')
-        document_opt = ['거래명세표', '수입면장']
-        document_cmb = ttk.Combobox(register_frame, state='readonly', values=document_opt, height=2, width=10)
-        document_cmb.current(0)
-        document_cmb.grid(row=2, column=1,sticky='w')
-
-        register_btn = Button(new_win, text='등록하기', command=self.register)
-        register_btn.place(x=200, y= 250)
-
-    def register(self):
-        if vendor_name_txt.get() == "":
+    def regist(self):
+        if name_cmb.get() == "":
             msgbox.showerror("입력오류!", "업체명을 입력해주세요")
+        elif current_cmb.get() == "":
+            msgbox.showerror("입력오류!", "통화를 입력해주세요")
+        elif document_cmb.get() == "":
+            msgbox.showerror("입력오류!", "구매입증서류를 입력해주세요")
         else:
             # create table
             conn = sqlite3.connect('./BOM.db')
@@ -137,10 +114,46 @@ class Register_window():
              CREATE TABLE IF NOT EXISTS vendor(vendor text, current text, document text)
              ''')
             # insert into table
-            insert_sql = 'insert into vendor values(?,?,?)'
-            cur.execute(insert_sql, (vendor_name_txt.get(), currency_cmb.get(), document_cmb.get()))
-            conn.commit()
-            conn.close()
+            cur.execute('select * from vendor')
+            rs = cur.fetchall()
+            for row in rs :
+                data = (name_cmb.get(), current_cmb.get().upper(), document_cmb.get())
+                if row == tuple(data) :
+                    msgbox.showerror('중복오류!', '이미 존재하는 데이터입니다.\n다시 입력해주세요.')
+                else :
+                    insert_sql = 'INSERT OR IGNORE INTO vendor values(?,?,?)'
+                    cur.execute(insert_sql, (name_cmb.get(), current_cmb.get().upper(), document_cmb.get()))
+                    msgbox.showinfo('등록완료!', '구매처 등록을 완료했습니다.')
+                    conn.commit()
+                    conn.close()
 
-            msgbox.showinfo('등록완료!', '구매처 등록을 완료했습니다.')
-            self.tree_data_view()
+                    name_cmb.set('')
+                    current_cmb.set('')
+                    document_cmb.set('')
+
+                    self.tree_data_view()
+
+    def remove(self):
+        conn = sqlite3.connect('./BOM.db')
+        cur = conn.cursor()
+        list_table = cur.execute('''
+                select name from sqlite_master where type='table' and name='vendor'
+                ''').fetchall()
+        if list_table == []:
+            print('테이블이 없습니다.')
+        else:
+            selectedItem = tree.focus()
+            getValue = tree.item(selectedItem).get('values')
+            if selectedItem == "" :
+                msgbox.showerror('선택 오류', '삭제할 데이터를 선택해주세요.')
+            else :
+                response = msgbox.askyesno('예/아니오', '해당 데이터를 삭제합니까?')
+                if response == 1 :
+                    cur.execute('delete from vendor where vendor=:con1 and current=:con2 and document=:con3', {"con1":getValue[0], "con2":getValue[1], "con3":getValue[2]})
+                    conn.commit()
+                    conn.close()
+                    msgbox.showinfo('삭제완료!', '삭제를 완료했습니다.')
+
+                    self.tree_data_view()
+                elif response == 0 :
+                    return
