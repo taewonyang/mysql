@@ -9,14 +9,39 @@ class Register_window():
         self.window = window
         self.window.geometry('600x600')
 
+        self.layout()
         self.create_tree_widget()
         self.tree_data_view()
-        self.layout()
+
+    def layout(self):
+        global name_cmb, current_cmb, document_cmb
+        # 검색 폼
+        searchFrame = Frame(self.window)
+        searchFrame.place(x=45, y=490)
+        name_cmb = ttk.Combobox(searchFrame, height=5, width=26)
+        current_cmb = ttk.Combobox(searchFrame, height=5, width=4)
+        document_cmb = ttk.Combobox(searchFrame, height=5, width=11)
+        name_cmb.pack(side='left', padx=4)
+        current_cmb.pack(side='left', padx=4)
+        document_cmb.pack(side='left', padx=4)
+
+        # 버튼
+        btn_frame = Frame(self.window)
+        btn_frame.place(x=485, y=60)
+        modify_btn = Button(btn_frame, text='거래처\n 수정', command=self.modify)
+        modify_btn.pack(padx=5, pady=5)
+        del_btn = Button(btn_frame, text='거래처\n 삭제 ', command=self.remove)
+        del_btn.pack(padx=5, pady=5)
+
+        search_btn = Button(self.window, text='조회')
+        search_btn.place(x=425, y=485)
+        new_btn = Button(self.window, text='거래처\n 등록 ', command=self.regist)
+        new_btn.place(x=485, y=480)
 
     def create_tree_widget(self):
         global tree
         tree_frame = Frame(self.window)
-        tree_frame.place(x=50, y=60, width=390, height=400)
+        tree_frame.place(x=50, y=60, width=410, height=400)
 
         columns = ('name_column', 'current_column', 'document_column')
         tree = ttk.Treeview(tree_frame, columns=columns, show='headings')
@@ -34,14 +59,20 @@ class Register_window():
         tree.configure(yscrollcommand=scrollbar.set)
 
     def tree_data_view(self):
+        global name_opt, current_opt, document_opt
         conn = sqlite3.connect('./BOM.db')
         cur = conn.cursor()
         list_table = cur.execute('''
         select name from sqlite_master where type='table' and name='vendor'
         ''').fetchall()
+
+        name_opt = []
+        current_opt = []
+        document_opt = []
         if list_table == [] :
             print('테이블이 없습니다.')
         else :
+            #트리뷰 새로고침
             cur.execute('select * from vendor')
             rs = cur.fetchall()
             for i in tree.get_children():
@@ -49,54 +80,20 @@ class Register_window():
             for contact in rs:
                 tree.insert('', END, values=contact)
 
-    def layout(self):
-        global name_cmb, current_cmb, document_cmb
-        # 검색 폼
-        conn = sqlite3.connect('./BOM.db')
-        cur = conn.cursor()
-        list_table = cur.execute('''
-                select name from sqlite_master where type='table' and name='vendor'
-                ''').fetchall()
-        name_opt = []
-        current_opt = []
-        document_opt = []
-        if list_table == []:
-            print('테이블이 없습니다.')
-        else :
-            cur.execute('select * from vendor')
-            rs = cur.fetchall()
-            for row in rs :
-                if (row[0] in name_opt) == False :
+        # 입력창 새로고침
+            for row in rs:
+                if (row[0] in name_opt) == False:
                     name_opt.append(row[0])
-                if (row[1] in current_opt) == False :
+                if (row[1] in current_opt) == False:
                     current_opt.append(row[1])
-                if (row[2] in document_opt) == False :
+                if (row[2] in document_opt) == False:
                     document_opt.append(row[2])
         name_opt.sort()
         current_opt.sort()
         document_opt.sort()
-
-        searchFrame = Frame(self.window)
-        searchFrame.place(x=45, y=490)
-        name_cmb = ttk.Combobox(searchFrame, height=5, width=26, values=name_opt)
-        current_cmb = ttk.Combobox(searchFrame, height=5, width=4, values=current_opt)
-        document_cmb = ttk.Combobox(searchFrame, height=5, width=11, values=document_opt)
-        name_cmb.pack(side='left', padx=4)
-        current_cmb.pack(side='left', padx=4)
-        document_cmb.pack(side='left', padx=4)
-
-        # 버튼
-        btn_frame = Frame(self.window)
-        btn_frame.place(x=485, y=60)
-        modify_btn = Button(btn_frame, text='거래처\n 수정 ')
-        modify_btn.pack(padx=5, pady=5)
-        del_btn = Button(btn_frame, text='거래처\n 삭제 ', command=self.remove)
-        del_btn.pack(padx=5, pady=5)
-
-        search_btn = Button(self.window, text='조회')
-        search_btn.place(x=425, y=485)
-        new_btn = Button(self.window, text='거래처\n 등록 ', command=self.regist)
-        new_btn.place(x=485, y=480)
+        name_cmb.configure(values=name_opt)
+        current_cmb.configure(values=current_opt)
+        document_cmb.configure(values=document_opt)
 
     def regist(self):
         if name_cmb.get() == "":
@@ -170,3 +167,55 @@ class Register_window():
                     self.tree_data_view()
                 elif response == 0 :
                     return
+
+    def modify(self):
+        selectedItem = tree.focus()
+        getValue = tree.item(selectedItem).get('values')
+        if selectedItem == "" :
+            msgbox.showerror('선택 오류', '수정할 데이터를 선택해주세요.')
+        else :
+            modify_win = Toplevel()
+            modify_frame = Frame(modify_win)
+            modify_frame.pack()
+            # layout
+            l1 = Label(modify_frame, text='업체명')
+            l2 = Label(modify_frame, text='통화')
+            l3 = Label(modify_frame, text='구매입증서류')
+            l1.grid(row=0, column=0)
+            l2.grid(row=1, column=0)
+            l3.grid(row=2, column=0)
+
+            cmb1 = ttk.Combobox(modify_frame, height=5, width=26)
+            cmb2 = ttk.Combobox(modify_frame, height=5, width=4)
+            cmb3 = ttk.Combobox(modify_frame, height=5, width=11)
+            cmb1.grid(row=0, column=1)
+            cmb2.grid(row=1, column=1)
+            cmb3.grid(row=2, column=1)
+
+            cmb1.configure(values=name_opt)
+            cmb2.configure(values=current_opt)
+            cmb3.configure(values=document_opt)
+            cmb1.set(getValue[0])
+            cmb2.set(getValue[1])
+            cmb3.set(getValue[2])
+
+            def data_change() :
+                if cmb1.get() == "":
+                    msgbox.showerror("입력오류!", "업체명을 입력해주세요")
+                elif cmb2.get() == "":
+                    msgbox.showerror("입력오류!", "통화를 입력해주세요")
+                elif cmb3.get() == "":
+                    msgbox.showerror("입력오류!", "구매입증서류를 입력해주세요")
+                else:
+                    conn = sqlite3.connect('./BOM.db')
+                    cur = conn.cursor()
+                    cur.execute('update vendor set vendor=? where ')
+
+
+                    conn.commit()
+                    conn.close()
+
+            Button(modify_win, text='수정하기', command=data_change).pack()
+
+
+
