@@ -1,7 +1,6 @@
 from tkinter import *
 import tkinter.ttk as ttk
 import tkinter.messagebox as msgbox
-import os
 import sqlite3
 
 class Register_window():
@@ -79,7 +78,6 @@ class Register_window():
                 tree.delete(i)
             for contact in rs:
                 tree.insert('', END, values=contact)
-
         # 입력창 새로고침
             for row in rs:
                 if (row[0] in name_opt) == False:
@@ -107,7 +105,7 @@ class Register_window():
             conn = sqlite3.connect('./BOM.db')
             cur = conn.cursor()
             cur.execute(''' 
-             CREATE TABLE IF NOT EXISTS vendor(vendor text, current text, document text)
+             CREATE TABLE IF NOT EXISTS vendor(name text, current text, document text)
              ''')
             conn.commit()
             conn.close()
@@ -159,7 +157,7 @@ class Register_window():
             else :
                 response = msgbox.askyesno('예/아니오', '해당 데이터를 삭제합니까?')
                 if response == 1 :
-                    cur.execute('delete from vendor where vendor=:con1 and current=:con2 and document=:con3', {"con1":getValue[0], "con2":getValue[1], "con3":getValue[2]})
+                    cur.execute('delete from vendor where name=:con1 and current=:con2 and document=:con3', {"con1":getValue[0], "con2":getValue[1], "con3":getValue[2]})
                     conn.commit()
                     conn.close()
                     msgbox.showinfo('삭제완료!', '삭제를 완료했습니다.')
@@ -185,37 +183,36 @@ class Register_window():
             l2.grid(row=1, column=0)
             l3.grid(row=2, column=0)
 
-            cmb1 = ttk.Combobox(modify_frame, height=5, width=26)
-            cmb2 = ttk.Combobox(modify_frame, height=5, width=4)
-            cmb3 = ttk.Combobox(modify_frame, height=5, width=11)
-            cmb1.grid(row=0, column=1)
-            cmb2.grid(row=1, column=1)
-            cmb3.grid(row=2, column=1)
-
-            cmb1.configure(values=name_opt)
-            cmb2.configure(values=current_opt)
-            cmb3.configure(values=document_opt)
-            cmb1.set(getValue[0])
-            cmb2.set(getValue[1])
-            cmb3.set(getValue[2])
+            txt1 = Entry(modify_frame, width=26)
+            txt2 = Entry(modify_frame, width=4)
+            txt3 = Entry(modify_frame, width=11)
+            txt1.insert(0, getValue[0])
+            txt2.insert(0, getValue[1])
+            txt3.insert(0, getValue[2])
+            txt1.grid(row=0, column=1)
+            txt2.grid(row=1, column=1)
+            txt3.grid(row=2, column=1)
 
             def data_change() :
-                if cmb1.get() == "":
+                if txt1.get() == "":
                     msgbox.showerror("입력오류!", "업체명을 입력해주세요")
-                elif cmb2.get() == "":
+                elif txt2.get() == "":
                     msgbox.showerror("입력오류!", "통화를 입력해주세요")
-                elif cmb3.get() == "":
+                elif txt3.get() == "":
                     msgbox.showerror("입력오류!", "구매입증서류를 입력해주세요")
                 else:
                     conn = sqlite3.connect('./BOM.db')
                     cur = conn.cursor()
-                    cur.execute('update vendor set vendor=? where ')
-
-
+                    update_query = '''
+                    update vendor set name=?, current=?, document=? where name=? and current=? and document=?
+                    '''
+                    query_data = (txt1.get(), txt2.get(), txt3.get(), getValue[0], getValue[1], getValue[2])
+                    cur.execute(update_query, query_data)
+                    msgbox.showinfo('수정완료!', '데이터가 수정되었습니다.')
                     conn.commit()
                     conn.close()
 
+                    self.tree_data_view()
+                    modify_win.destroy()
+
             Button(modify_win, text='수정하기', command=data_change).pack()
-
-
-
