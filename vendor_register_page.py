@@ -77,15 +77,15 @@ class Register_window():
             for i in tree.get_children():
                 tree.delete(i)
             for contact in rs:
-                tree.insert('', END, values=contact)
+                tree.insert('', END, values=contact[1:])
         # 입력창 새로고침
             for row in rs:
-                if (row[0] in name_opt) == False:
-                    name_opt.append(row[0])
-                if (row[1] in current_opt) == False:
-                    current_opt.append(row[1])
-                if (row[2] in document_opt) == False:
-                    document_opt.append(row[2])
+                if (row[1] in name_opt) == False:
+                    name_opt.append(row[1])
+                if (row[2] in current_opt) == False:
+                    current_opt.append(row[2])
+                if (row[3] in document_opt) == False:
+                    document_opt.append(row[3])
         name_opt.sort()
         current_opt.sort()
         document_opt.sort()
@@ -105,7 +105,11 @@ class Register_window():
             conn = sqlite3.connect('./BOM.db')
             cur = conn.cursor()
             cur.execute(''' 
-             CREATE TABLE IF NOT EXISTS vendor(name text, current text, document text)
+             CREATE TABLE IF NOT EXISTS vendor(
+                vendor_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+                name        TEXT    NOT NULL,
+                current     TEXT    NOT NULL,
+                document    TEXT    NOT NULL)
              ''')
             conn.commit()
             conn.close()
@@ -121,7 +125,7 @@ class Register_window():
             overlap_check = []
             if rs != [] : #DB에 데이터가 있다면
                 for row in rs:
-                    if row == tuple(data):
+                    if row[1:] == tuple(data):
                         overlap_check.append('ok')
                         break
             # (데이터O / 중복O)
@@ -129,7 +133,7 @@ class Register_window():
                 msgbox.showerror('중복오류!', '이미 존재하는 데이터입니다.\n다시 입력해주세요.')
             # (데이터O / 중복X) or (데이터X)
             else :
-                insert_sql = 'INSERT OR IGNORE INTO vendor values(?,?,?)'
+                insert_sql = 'INSERT OR IGNORE INTO vendor values(NULL,?,?,?)'
                 cur.execute(insert_sql, (name_cmb.get(), current_cmb.get().upper(), document_cmb.get()))
                 msgbox.showinfo('등록완료!', '구매처 등록을 완료했습니다.')
                 conn.commit()
@@ -206,7 +210,7 @@ class Register_window():
                     update_query = '''
                     update vendor set name=?, current=?, document=? where name=? and current=? and document=?
                     '''
-                    query_data = (txt1.get(), txt2.get(), txt3.get(), getValue[0], getValue[1], getValue[2])
+                    query_data = (txt1.get(), txt2.get().upper(), txt3.get(), getValue[0], getValue[1], getValue[2])
                     cur.execute(update_query, query_data)
                     msgbox.showinfo('수정완료!', '데이터가 수정되었습니다.')
                     conn.commit()
