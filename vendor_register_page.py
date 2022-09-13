@@ -3,6 +3,7 @@ import tkinter.ttk as ttk
 import tkinter.messagebox as msgbox
 import sqlite3
 
+
 class Register_window():
     def __init__(self, window):
         self.window = window
@@ -32,7 +33,7 @@ class Register_window():
         del_btn = Button(btn_frame, text='거래처\n 삭제 ', command=self.remove)
         del_btn.pack(padx=5, pady=5)
 
-        search_btn = Button(self.window, text='조회')
+        search_btn = Button(self.window, text='조회', command=self.search)
         search_btn.place(x=425, y=485)
         new_btn = Button(self.window, text='거래처\n 등록 ', command=self.regist)
         new_btn.place(x=485, y=480)
@@ -109,7 +110,8 @@ class Register_window():
                 vendor_id   INTEGER PRIMARY KEY AUTOINCREMENT,
                 name        TEXT    NOT NULL,
                 current     TEXT    NOT NULL,
-                document    TEXT    NOT NULL)
+                document    TEXT    NOT NULL
+                )
              ''')
             conn.commit()
             conn.close()
@@ -220,3 +222,47 @@ class Register_window():
                     modify_win.destroy()
 
             Button(modify_win, text='수정하기', command=data_change).pack()
+
+    def search(self):
+        conn = sqlite3.connect('./BOM.db')
+        cur = conn.cursor()
+        check_list = [name_cmb.get(), current_cmb.get(), document_cmb.get()]
+        c = 0
+        column_index=[]
+        searchInfo = [] # (검색순번, 입력값)
+        for i in enumerate(check_list, start=1) :
+            if i[1] != "" :
+                c = c+1
+                searchInfo.append(i)
+                column_index.append(i[0])
+        print('검색하려는값 (검색순번,입력값)')
+        print(searchInfo)
+        cur.execute('select * from vendor')
+        column_name = [fd[0] for fd in cur.description] #테이블의 필드명 가져오기
+        print('필드명')
+        print(column_name)
+        print('컬럼 인덱스')
+        print(column_index)
+        if c ==3 :
+            search_sql = 'select * from vendor where name =? and current =? and document=?'
+            cur.execute(search_sql,(name_cmb.get() , current_cmb.get(), document_cmb.get()))
+            rs = cur.fetchall()
+            print('3회')
+            print(rs)
+        elif c==2 :
+            search_sql = f'select * from vendor where {column_name[column_index[0]]} =? and {column_name[column_index[1]]} =?'
+            print(searchInfo)
+            search_txt1 = searchInfo[0][1]
+            search_txt2 = searchInfo[1][1]
+            cur.execute(search_sql, (search_txt1,search_txt2))
+            rs = cur.fetchall()
+            print('2회')
+            print(rs)
+        elif c==1 :
+            search_sql = f'select * from vendor where {column_name[column_index[0]]} =?'
+            search_txt = searchInfo[0][1]
+            print(search_txt)
+            cur.execute(search_sql, (search_txt,))
+            rs = cur.fetchone()
+            print('1회')
+            print(rs)

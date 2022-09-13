@@ -2,13 +2,18 @@ from tkinter import *
 import tkinter.ttk as ttk
 import tkinter.messagebox as msgbox
 import sqlite3
-PRAGMA foreign_keys = ON
 
 class Material_window():
     def __init__(self, window):
         self.window = window
         self.window.geometry('600x600')
         self.layout()
+
+        conn = sqlite3.connect('./BOM.db')
+        cur = conn.cursor()
+        cur.execute('select * from material')
+        rs = cur.fetchall()
+        print(rs)
 
     def layout(self):
         global cmb1, e1, lb4, lb6, cmb2
@@ -62,7 +67,7 @@ class Material_window():
         # create table
         conn = sqlite3.connect('./BOM.db')
         cur = conn.cursor()
-        cur.execute(''' 
+        cur.execute('''
                      CREATE TABLE IF NOT EXISTS material(
                         material_id     INTEGER PRIMARY KEY AUTOINCREMENT,
                         vendor_id       INTEGER NOT NULL,
@@ -72,7 +77,9 @@ class Material_window():
                         document        TEXT    NOT NULL,
                         item_name_eng   TEXT    NOT NULL,
                         FOREIGN KEY (vendor_id)
-                            REFERENCES vendor (vendor_id)
+                        REFERENCES vendor (vendor_id)
+                        ON UPDATE CASCADE
+                        ON DELETE RESTRICT
                         )
                      ''')
         conn.commit()
@@ -85,12 +92,9 @@ class Material_window():
         sel_name = cmb1.get()
         cur.execute('select * from vendor where name=?', (sel_name,))
         rs = cur.fetchall()[0]
-        print(rs)
 
         insert_sql = 'INSERT OR IGNORE INTO material values(NULL,?,?,?,?,?,?)'
         cur.execute(insert_sql, (rs[0], rs[1], e1.get(), rs[2], rs[3], cmb2.get()))
         msgbox.showinfo('등록완료!', '구매처 등록을 완료했습니다.')
         conn.commit()
         conn.close()
-
-
