@@ -104,6 +104,7 @@ class Register_window():
         else:
             # create table
             conn = sqlite3.connect('./BOM.db')
+            conn.execute('PRAGMA foreign_keys = ON')
             cur = conn.cursor()
             cur.execute(''' 
              CREATE TABLE IF NOT EXISTS vendor(
@@ -113,12 +114,8 @@ class Register_window():
                 document    TEXT    NOT NULL
                 )
              ''')
-            conn.commit()
-            conn.close()
 
             # insert data into table
-            conn = sqlite3.connect('./BOM.db')
-            cur = conn.cursor()
             cur.execute('select * from vendor')
             rs = cur.fetchall()
 
@@ -135,7 +132,7 @@ class Register_window():
                 msgbox.showerror('중복오류!', '이미 존재하는 데이터입니다.\n다시 입력해주세요.')
             # (데이터O / 중복X) or (데이터X)
             else :
-                insert_sql = 'INSERT OR IGNORE INTO vendor values(NULL,?,?,?)'
+                insert_sql = 'INSERT INTO vendor values(NULL,?,?,?)'
                 cur.execute(insert_sql, (name_cmb.get(), current_cmb.get().upper(), document_cmb.get()))
                 msgbox.showinfo('등록완료!', '구매처 등록을 완료했습니다.')
                 conn.commit()
@@ -235,34 +232,35 @@ class Register_window():
                 c = c+1
                 searchInfo.append(i)
                 column_index.append(i[0])
-        print('검색하려는값 (검색순번,입력값)')
-        print(searchInfo)
+        # print('검색하려는값 (검색순번,입력값)')
+        # print(searchInfo)
         cur.execute('select * from vendor')
         column_name = [fd[0] for fd in cur.description] #테이블의 필드명 가져오기
-        print('필드명')
-        print(column_name)
-        print('컬럼 인덱스')
-        print(column_index)
+        # print('필드명')
+        # print(column_name)
+        # print('컬럼 인덱스')
+        # print(column_index)
         if c ==3 :
-            search_sql = 'select * from vendor where name =? and current =? and document=?'
-            cur.execute(search_sql,(name_cmb.get() , current_cmb.get(), document_cmb.get()))
+            search_sql = 'select * from vendor where name like ? and current like ? and document like ?'
+            cur.execute(search_sql,('%'+name_cmb.get()+'%' , '%'+current_cmb.get()+'%', '%'+document_cmb.get()+'%'))
             rs = cur.fetchall()
-            print('3회')
-            print(rs)
         elif c==2 :
-            search_sql = f'select * from vendor where {column_name[column_index[0]]} =? and {column_name[column_index[1]]} =?'
-            print(searchInfo)
+            search_sql = f'select * from vendor where {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ?'
             search_txt1 = searchInfo[0][1]
             search_txt2 = searchInfo[1][1]
-            cur.execute(search_sql, (search_txt1,search_txt2))
+            cur.execute(search_sql, ('%'+search_txt1+'%' , '%'+search_txt2+'%'))
             rs = cur.fetchall()
-            print('2회')
-            print(rs)
         elif c==1 :
-            search_sql = f'select * from vendor where {column_name[column_index[0]]} =?'
+            search_sql = f'select * from vendor where {column_name[column_index[0]]} like ?'
             search_txt = searchInfo[0][1]
-            print(search_txt)
-            cur.execute(search_sql, (search_txt,))
-            rs = cur.fetchone()
-            print('1회')
-            print(rs)
+            cur.execute(search_sql, ('%'+search_txt+'%',))
+            rs = cur.fetchall()
+        elif c==0 :
+            cur.execute('select * from vendor')
+            rs = cur.fetchall()
+
+        # 트리뷰 view
+        for i in tree.get_children():
+            tree.delete(i)
+        for contact in rs:
+            tree.insert('', END, values=contact[1:])
