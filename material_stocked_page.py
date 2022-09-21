@@ -12,7 +12,7 @@ class StockedList_window():
 
     def layout(self):
         global material_cmb, namecode_kor_txt, namecode_eng_txt, kind_txt, hscode_txt
-        global vendorName_cmb, document_txt, current_txt
+        global vendorName_cmb, document_txt, current_txt, buydate_e, exchangeRate_e, price_e, totalPrice_txt, manufacturer_e, unit_e, origin_e
         title = Label(self.window, text='원자재 입고리스트', font=("Georgia", 15))
         title.place(x=430, y=20)
         material_sn = Label(self.window, text='원자재 품번')
@@ -48,24 +48,24 @@ class StockedList_window():
 
         material_cmb = ttk.Combobox(material_fr, height=5, width=15)
         material_cmb.grid(row=1, column=0, padx=5, pady=3)
-        namecode_kor_txt = Label(material_fr)
+        namecode_kor_txt = Label(material_fr, width=15)
         namecode_kor_txt.grid(row=1, column=1, padx=5, pady=3)
-        namecode_eng_txt = Label(material_fr)
+        namecode_eng_txt = Label(material_fr, width=10)
         namecode_eng_txt.grid(row=1, column=2, padx=5, pady=3)
-        kind_txt = Label(material_fr)
+        kind_txt = Label(material_fr, width=7)
         kind_txt.grid(row=1, column=3, padx=5, pady=3)
-        hscode_txt = Label(material_fr)
+        hscode_txt = Label(material_fr, width=12)
         hscode_txt.grid(row=1, column=4, padx=5, pady=3)
         requriedAmount_e = Entry(material_fr, width=7)
         requriedAmount_e.grid(row=1, column=5, padx=5, pady=3)
-        unit_txt = Label(material_fr, text='EA')
-        unit_txt.grid(row=1, column=6, padx=5, pady=3)
+        unit_e = Entry(material_fr, width=5, justify='center')
+        unit_e.grid(row=1, column=6, padx=5, pady=3)
         ekw_e = Entry(material_fr, width=13)
         ekw_e.grid(row=1, column=7, padx=5, pady=3)
-        manufacturer_e = Entry(material_fr, width=13)
+        manufacturer_e = Entry(material_fr, width=7, justify='center')
         manufacturer_e.grid(row=1, column=8, padx=5, pady=3)
-        origin_txt = Label(material_fr, text='미상', width=7)
-        origin_txt.grid(row=1, column=9, padx=5, pady=3)
+        origin_e = Entry(material_fr, width=7, justify='center')
+        origin_e.grid(row=1, column=9, padx=5, pady=3)
 
 
         # 구매 frame
@@ -73,49 +73,59 @@ class StockedList_window():
         Purchase_fr.place(x=20, y=160)
 
         vendorname_lb = Label(Purchase_fr, text='구매처')
-        vendorname_lb.grid(row=0, column=0, padx=5, pady=5)
+        vendorname_lb.grid(row=0, column=0, padx=5, pady=3)
         buydate_lb = Label(Purchase_fr, text='구매일자')
-        buydate_lb.grid(row=0, column=1, padx=5, pady=5)
+        buydate_lb.grid(row=0, column=1, padx=5, pady=3)
         exchangeRate_lb = Label(Purchase_fr, text='(구매일) 환율')
-        exchangeRate_lb.grid(row=0, column=2, padx=5, pady=5)
+        exchangeRate_lb.grid(row=0, column=2, padx=5, pady=3)
         price_lb = Label(Purchase_fr, text='단가')
-        price_lb.grid(row=0, column=3, padx=5, pady=5)
+        price_lb.grid(row=0, column=3, padx=5, pady=3)
         current_lb = Label(Purchase_fr, text='통화')
-        current_lb.grid(row=0, column=4, padx=5, pady=5)
+        current_lb.grid(row=0, column=4, padx=5, pady=3)
         totalPrice_lb = Label(Purchase_fr, text='가격')
-        totalPrice_lb.grid(row=0, column=5, padx=5, pady=5)
+        totalPrice_lb.grid(row=0, column=5, padx=5, pady=3)
         document_lb = Label(Purchase_fr, text='구매입증서류 종류')
-        document_lb.grid(row=0, column=6, padx=5, pady=5)
+        document_lb.grid(row=0, column=6, padx=5, pady=3)
 
         vendorName_cmb = ttk.Combobox(Purchase_fr, height=5, width=15)
-        vendorName_cmb.grid(row=1, column=0, padx=5, pady=5)
+        vendorName_cmb.grid(row=1, column=0, padx=5, pady=3)
         buydate_e = Entry(Purchase_fr, width=10)
-        buydate_e.grid(row=1, column=1, padx=5, pady=5)
+        buydate_e.grid(row=1, column=1, padx=5, pady=3)
         exchangeRate_e = Entry(Purchase_fr, width=10)
-        exchangeRate_e.grid(row=1, column=2, padx=5, pady=5)
+        exchangeRate_e.grid(row=1, column=2, padx=5, pady=3)
         price_e = Entry(Purchase_fr, width=10)
-        price_e.grid(row=1, column=3, padx=5, pady=5)
+        price_e.grid(row=1, column=3, padx=5, pady=3)
         current_txt = Label(Purchase_fr, width=8)
-        current_txt.grid(row=1, column=4, padx=5, pady=5)
+        current_txt.grid(row=1, column=4, padx=5, pady=3)
         totalPrice_txt = Label(Purchase_fr, width=15)
-        totalPrice_txt.grid(row=1, column=5, padx=5, pady=5)
+        totalPrice_txt.grid(row=1, column=5, padx=5, pady=3)
         document_txt = Label(Purchase_fr)
-        document_txt.grid(row=1, column=6, padx=5, pady=5)
+        document_txt.grid(row=1, column=6, padx=5, pady=3)
+
 
     def dbLoad(self):
         conn = sqlite3.connect('BOM.db')
         cur = conn.cursor()
+        # 원자재
+        material_db = cur.execute('select * from material_info').fetchall()
+        materialName_opt =[]
+        for row in material_db :
+            materialName_opt.append(row[1])
+        material_cmb.configure(values = materialName_opt)
 
-        # # 원자재
-        # material_db = cur.execute('select * from material_info').fetchall()
-        # materialName_opt =[]
-        # for row in material_db :
-        #     materialName_opt.append(row[1])
-        # material_cmb.configure(values = materialName_opt)
+        def changeLabel_material(event):
+            sel_name = material_cmb.get()
+            cur.execute('select * from material_info where material_name=?', (sel_name,))
+            rs = cur.fetchall()[0]
+            namecode_kor_txt.configure(text=rs[2])
+            namecode_eng_txt.configure(text=rs[3])
+            kind_txt.configure(text=rs[4])
+            hscode_txt.configure(text=rs[5])
 
-        # namecode_eng_txt, kind_txt, hscode_txt
+        material_cmb.bind("<<ComboboxSelected>>", changeLabel_material)
 
-        # 구매처
+
+        # 구매정보
         vendor_db = cur.execute('select * from vendor').fetchall()
         name_opt = []
         for row in vendor_db :
@@ -126,16 +136,30 @@ class StockedList_window():
             sel_name = vendorName_cmb.get()
             cur.execute('select * from vendor where name=?', (sel_name,))
             rs = cur.fetchall()[0]
-            print(rs)
             document_txt.configure(text=rs[3])
             current_txt.configure(text=rs[2])
 
-            # lb4.configure(text=rs[2])
-            # lb6.configure(text=rs[3])
+        def toatl_cal(event) :
+            try :
+                if exchangeRate_e.get() !="" and price_e.get() !="" :
+                    total_p = float(exchangeRate_e.get()) * float(price_e.get())
+                    totalPrice_txt.configure(text=total_p)
+                else :
+                    totalPrice_txt.configure(text="")
+            except :
+                print('예외처리')
 
         vendorName_cmb.bind("<<ComboboxSelected>>", changeLabel_purchase)
+        price_e.bind("<KeyRelease>", toatl_cal)
+        exchangeRate_e.bind("<KeyRelease>", toatl_cal)
+
+        # 기본설정
+        manufacturer_e.insert(0,"미상")
+        unit_e.insert(0,"EA")
+        origin_e.insert(0,"미상")
 
 
+        # buydate_e, exchangeRate_e, price_e, totalPrice_txt
     #
     #     lb7 = Label(self.window, text='품명(영문)')
     #     cmb2 = ttk.Combobox(self.window, values=['SCD', 'PCD'], height=2, width=6)
