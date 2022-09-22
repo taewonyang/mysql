@@ -185,7 +185,9 @@ class Warehousing_window():
         current_dir = os.getcwd()
         purchase_dir =  current_dir + f'\\document\\purchase\\{sn}'
         origin_dir = current_dir + f'\\document\\origin\\{sn}'
+        self.check_certificate()
 
+    def check_certificate(self):
         if os.path.exists(purchase_dir) == True :
             docMaterial_txt.configure(text='있음', background='#6B66FF', fg='#FFFFFF')
         else :
@@ -217,7 +219,7 @@ class Warehousing_window():
         global file, filename
         file = filedialog.askopenfilename(title='파일을 선택하세요',
                                           filetypes=(("JPG 파일", "*.jpg"), ("PDF 파일", "*.pdf"),
-                                                     ("all files", "*.*")))
+                                                     ("All files", "*.*")))
         filename = file.split('/')[-1]
         if filename == "":
             return
@@ -231,27 +233,31 @@ class Warehousing_window():
         print('destination')
         print(destination)
 
-        if os.path.exists(current_dir + '\\document') != True:
-            os.mkdir(current_dir + '\\document')
-            print('document 폴더생성')
-        else:
-            if os.path.exists(current_dir + f'\\document\\{folderName}') != True:
-                os.mkdir(current_dir + f'\\document\\{folderName}')
-                print('purchase 폴더생성')
-                if os.path.exists(current_dir + f'\\document\\{folderName}\\{sn}') != True:
-                    os.mkdir(current_dir + f'\\document\\{folderName}\\{sn}')
-                    print('sjd-1 폴더생성')
-                    if os.path.exists(destination) == True:
-                        response = msgbox.askyesno('예/아니오', '해당파일이 존재합니다.\n덮어쓰기를 실행할까요?')
-                        if response == 1:
-                            shutil.copyfile(file, destination)
-                            print('복사완료')
-                        else:
-                            print('덮어쓰기x, 복사x')
-                            pass
-                    else:
-                        shutil.copyfile(file, destination)
-                        print('중복x, 복사완료')
-            else :
+        if os.path.exists(destination) == True:
+            response = msgbox.askyesno('예/아니오', '해당파일이 존재합니다.\n덮어쓰기를 실행할까요?')
+            if response == 1:
                 shutil.copyfile(file, destination)
-                print('doc생성, purchase있어서 ')
+                print('복사완료')
+            else:
+                print('덮어쓰기x, 복사x')
+                pass
+        elif os.path.exists(current_dir + f'\\document\\{folderName}\\{sn}') == True :
+            shutil.copyfile(file, destination)
+            print('sjd폴더는 존재, 파일은 없음 -> 복사완료')
+        elif os.path.exists(current_dir + f'\\document\\{folderName}') == True :
+            os.mkdir(current_dir + f'\\document\\{folderName}\\{sn}')
+            shutil.copyfile(file, destination)
+            print('document폴더O, sjd-1폴더 만들고 복사완료')
+        elif os.path.exists(current_dir + '\\document') == True :
+            os.mkdir(current_dir + f'\\document\\{folderName}')
+            os.mkdir(current_dir + f'\\document\\{folderName}\\{sn}')
+            shutil.copyfile(file, destination)
+            print('document폴더O, purchas폴더 만들고, sjd-1폴더 만들고 복사완료')
+        else :
+            os.mkdir(current_dir + '\\document')
+            os.mkdir(current_dir + f'\\document\\{folderName}')
+            os.mkdir(current_dir + f'\\document\\{folderName}\\{sn}')
+            shutil.copyfile(file, destination)
+            print('document폴더만들고, purchas폴더 만들고, sjd-1폴더 만들고 복사완료')
+
+        self.check_certificate()
