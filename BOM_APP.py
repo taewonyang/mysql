@@ -1,5 +1,5 @@
 from tkinter import *
-import vendor_register_page, material_stocked_page, material_info_page
+import vendor_register_page, warehousing_goods_page, material_info_page
 
 class App() :
     def __init__(self, root):
@@ -23,7 +23,7 @@ class App() :
 
     def go_material_stocked(self):
         win = Toplevel()
-        material_stocked_page.StockedList_window(win)
+        warehousing_goods_page.Warehousing_window(win)
 
     def go_material_info(self):
         win=Toplevel()

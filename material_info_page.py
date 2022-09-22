@@ -141,10 +141,11 @@ class Material_Info :
             rs = cur.fetchall()
 
             # 중복여부 체크
-            data = (name_e.get(), namecode_eng_cmb.get(), namecode_kor_txt.cget('text'), kind_txt.cget('text'),hscode_e.get())
+            data = (str(name_e.get()), str(namecode_eng_cmb.get()), str(namecode_kor_txt.cget('text')), str(kind_txt.cget('text')),str(hscode_e.get()))
             overlap_check = []
             if rs != []:  # DB에 데이터가 있다면
                 for row in rs:
+                    print(row)
                     if row[1:] == tuple(data):
                         overlap_check.append('ok')
                         break
