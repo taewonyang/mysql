@@ -9,9 +9,14 @@ import sqlite3
 class Warehousing_window():
     def __init__(self, window):
         self.window = window
-        self.window.geometry('1000x800')
+        self.window.geometry('1000x900')
+        self.window.resizable(False, False)
         self.layout()
         self.initialDB()
+
+        global folderName, destination
+        folderName = []
+        destination = []
 
     def layout(self):
         global material_cmb, namecode_kor_txt, namecode_eng_txt, kind_txt, hscode_txt, material_txt
@@ -53,7 +58,7 @@ class Warehousing_window():
         material_cmb.grid(row=1, column=0, padx=5, pady=3)
         namecode_kor_txt = Label(material_fr, width=15)
         namecode_kor_txt.grid(row=1, column=1, padx=5, pady=3)
-        namecode_eng_txt = Label(material_fr, width=10)
+        namecode_eng_txt = Label(material_fr, width=17)
         namecode_eng_txt.grid(row=1, column=2, padx=5, pady=3)
         kind_txt = Label(material_fr, width=7)
         kind_txt.grid(row=1, column=3, padx=5, pady=3)
@@ -116,79 +121,101 @@ class Warehousing_window():
         pack1_lb.grid(row=1, column=7, padx=5, pady=3)
         docMaterial_txt = Label(pack1_lb)
         docMaterial_txt.grid(row=0, column=0, padx=1, pady=3)
-        addfile_btn1 = Button(pack1_lb, text='파일첨부', command=self.open_saveWindow)
+        addfile_btn1 = Button(pack1_lb, text='파일첨부', command=self.open_attachWin_purchase)
         addfile_btn1.grid(row=0, column=1, padx=1, pady=3)
         pack2_lb = Label(Purchase_fr)
         pack2_lb.grid(row=1, column=8, padx=5, pady=3)
         docOrigin_txt = Label(pack2_lb)
         docOrigin_txt.grid(row=0, column=0, padx=1, pady=3)
-        addfile_btn2 = Button(pack2_lb, text='파일첨부')
+        addfile_btn2 = Button(pack2_lb, text='파일첨부', command=self.open_attachWin_origin)
         addfile_btn2.grid(row=0, column=1, padx=1, pady=3)
 
+        # 버튼
+        db_insert_btn = Button(self.window, text='save')
+        db_insert_btn.place(x=830, y=260)
+
     def initialDB(self):
-        conn = sqlite3.connect('BOM.db')
-        cur = conn.cursor()
-        # 원자재
-        material_db = cur.execute('select * from material_info').fetchall()
-        materialName_opt =[]
-        for row in material_db :
-            materialName_opt.append(row[1])
-        material_cmb.configure(values = materialName_opt)
-
-        def changeLabel_material(event):
-            sel_name = material_cmb.get()
-            cur.execute('select * from material_info where material_name=?', (sel_name,))
-            rs = cur.fetchall()[0]
-            namecode_kor_txt.configure(text=rs[2])
-            namecode_eng_txt.configure(text=rs[3])
-            kind_txt.configure(text=rs[4])
-            hscode_txt.configure(text=rs[5])
-
-        material_cmb.bind("<<ComboboxSelected>>", changeLabel_material)
-
-
-        # 구매정보
-        vendor_db = cur.execute('select * from vendor').fetchall()
-        name_opt = []
-        for row in vendor_db :
-            name_opt.append(row[1])
-        vendorName_cmb.configure(values = name_opt)
-
-        def changeLabel_purchase(event):
-            sel_name = vendorName_cmb.get()
-            cur.execute('select * from vendor where name=?', (sel_name,))
-            rs = cur.fetchall()[0]
-            document_txt.configure(text=rs[3])
-            current_txt.configure(text=rs[2])
-
-        def toatl_cal(event) :
-            try :
-                if exchangeRate_e.get() !="" and price_e.get() !="" :
-                    total_p = float(exchangeRate_e.get()) * float(price_e.get())
-                    totalPrice_txt.configure(text=total_p)
-                else :
-                    totalPrice_txt.configure(text="")
-            except :
-                print('예외처리')
-
-        vendorName_cmb.bind("<<ComboboxSelected>>", changeLabel_purchase)
-        price_e.bind("<KeyRelease>", toatl_cal)
-        exchangeRate_e.bind("<KeyRelease>", toatl_cal)
-
         # 기본설정
-        manufacturer_e.insert(0,"미상")
-        unit_e.insert(0,"EA")
-        origin_e.insert(0,"미상")
+        manufacturer_e.insert(0, "미상")
+        unit_e.insert(0, "EA")
+        origin_e.insert(0, "미상")
 
         global purchase_dir, origin_dir, current_dir, sn
         sn = material_txt.cget('text')
         current_dir = os.getcwd()
-        purchase_dir =  current_dir + f'\\document\\purchase\\{sn}'
+        purchase_dir = current_dir + f'\\document\\purchase\\{sn}'
         origin_dir = current_dir + f'\\document\\origin\\{sn}'
+
+        # 자동계산입력 (단가 / 가격 )
+        def toatl_cal(event):
+            try:
+                if exchangeRate_e.get() != "" and price_e.get() != "":
+                    total_p = float(exchangeRate_e.get()) * float(price_e.get())
+                    totalPrice_txt.configure(text=total_p)
+                else:
+                    totalPrice_txt.configure(text="")
+            except:
+                print('예외처리')
+
+        price_e.bind("<KeyRelease>", toatl_cal)
+        exchangeRate_e.bind("<KeyRelease>", toatl_cal)
+
+
+        # 콤보박스 리스트 뿌려주기
+        conn = sqlite3.connect('BOM.db')
+        cur = conn.cursor()
+
+        # 1)원자재
+        list_table = cur.execute('''
+               select name from sqlite_master where type='table' and name='material_info'
+               ''').fetchall()
+        if list_table == []:
+            print('material_info 테이블이 없습니다.')
+        else :
+            material_db = cur.execute('select * from material_info').fetchall()
+            materialName_opt =[]
+            for row in material_db :
+                materialName_opt.append(row[1])
+            material_cmb.configure(values = materialName_opt)
+
+            def changeLabel_material(event):
+                sel_name = material_cmb.get()
+                cur.execute('select * from material_info where material_name=?', (sel_name,))
+                rs = cur.fetchall()[0]
+                namecode_kor_txt.configure(text=rs[2])
+                namecode_eng_txt.configure(text=rs[3])
+                kind_txt.configure(text=rs[4])
+                hscode_txt.configure(text=rs[5])
+
+            material_cmb.bind("<<ComboboxSelected>>", changeLabel_material)
+
+        # 2)구매정보
+        list_table = cur.execute('''
+                       select name from sqlite_master where type='table' and name='vendor'
+                       ''').fetchall()
+        if list_table == []:
+            print('vendor 테이블이 없습니다.')
+        else :
+            vendor_db = cur.execute('select * from vendor').fetchall()
+            name_opt = []
+            for row in vendor_db :
+                name_opt.append(row[1])
+            vendorName_cmb.configure(values = name_opt)
+
+            def changeLabel_purchase(event):
+                sel_name = vendorName_cmb.get()
+                cur.execute('select * from vendor where name=?', (sel_name,))
+                rs = cur.fetchall()[0]
+                document_txt.configure(text=rs[3])
+                current_txt.configure(text=rs[2])
+
+            vendorName_cmb.bind("<<ComboboxSelected>>", changeLabel_purchase)
+
         self.check_certificate()
 
-    def check_certificate(self):
-        if os.path.exists(purchase_dir) == True :
+
+    def check_certificate(self): # 입증서류 유무 체크
+        if os.path.exists(purchase_dir+'\\') == True :
             docMaterial_txt.configure(text='있음', background='#6B66FF', fg='#FFFFFF')
         else :
             docMaterial_txt.configure(text='없음', background='#000000', fg='#FFFFFF')
@@ -198,23 +225,73 @@ class Warehousing_window():
         else :
             docOrigin_txt.configure(text='없음', background='#000000', fg='#FFFFFF')
 
-    def open_saveWindow(self):
-        global path_e
-        #Layout
+    def regist(self):
+        # create table
+        conn = sqlite3.connect('./BOM.db')
+        conn.execute('PRAGMA foreign_keys = ON')
+        cur = conn.cursor()
+        cur.execute(''' 
+                     CREATE TABLE IF NOT EXISTS warehoused_list (
+                        warehoused_id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                        material_sn         TEXT    NOT NULL,
+                        material_name       TEXT    NOT NULL,
+                        namecode_kor        TEXT    NOT NULL,
+                        namecode_eng        TEXT    NOT NULL,
+                        material_kind       TEXT    NOT NULL,
+                        hscode              TEXT    NOT NULL,
+                        requried_amount     INT     NOT NULL,
+                        unit                TEXT    NOT NULL,
+                        ekw                 INT     NOT NULL,
+                        manufacturer        TEXT    NOT NULL,
+                        country_origin      TEXT    NOT NULL,
+                        vendor_name         TEXT    NOT NULL,
+                        buydate             TEXT    NOT NULL,
+                        exchange_rate       FLOAT   NOT NULL,
+                        price               INT     NOT NULL,
+                        current             TEXT    NOT NULL,
+                        total_price         FLOAT   NOT NULL,
+                        document            TEXT    NOT NULL,
+                        purchase_doc_valid  TEXT    NOT NULL,
+                        origin_doc_valid    TEXT    NOT NULL,
+                        vendor_id           INTEGER NOT NULL,
+                        material_id         INTEGER NOT NULL
+                        )
+                     ''')
+
+
+
+    #################### 파일첨부 화면 ##########################
+    # 파일첨부 윈도우 오픈(구매증명서)
+    def open_attachWin_purchase(self):
+        self.open_attachWin()
+        saveFile_win.title('구매입증서류 파일첨부')
+        save_btn.configure(command=self.attach_purchaseFile)
+
+    # 파일첨부 윈도우 오픈(원산지증명서)
+    def open_attachWin_origin(self):
+        self.open_attachWin()
+        saveFile_win.title('원산지증빙서류 파일첨부')
+        save_btn.configure(command=self.attach_originFile)
+
+    def open_attachWin(self):
+        global path_e, save_btn, saveFile_win, cancel_btn
+        # Layout
         saveFile_win = Toplevel()
         saveFile_win.resizable(False, False)
-        saveFile_win.title('파일첨부')
         row1 = Label(saveFile_win, pady=7)
         row1.pack()
-        Label(row1, text='File Name').pack(side='left', padx=3, pady=5)
+        Label(row1, text='File Name', font=("Georgia", 11)).pack(side='left', padx=3, pady=5)
         path_e = Entry(row1, width=40)
-        path_e.pack(side='left', padx=3, pady=5)
-        Button(row1, text='파일선택', command=self.open_file).pack(side='left', padx=3, pady=5)
+        path_e.pack(side='left', padx=3, pady=5, ipady=2)
+        Button(row1, text='파일선택', font=("Georgia", 11), command=self.open_file).pack(side='left', padx=3, pady=5)
         row2 = Label(saveFile_win, pady=7)
         row2.pack()
-        Button(row2, text='파일 저장', command=self.save_purchaseFile).pack(side='left', padx=5, pady=5)
-        Button(row2, text='취소').pack(side='left', padx=5, pady=5)
+        save_btn = Button(row2, text='파일 저장', font=("Georgia", 11))
+        save_btn.pack(side='left', padx=5, pady=5)
+        cancel_btn = Button(row2, text='취소', font=("Georgia", 11), command=self.cancel_attache_win)
+        cancel_btn.pack(side='left', padx=5, pady=5)
 
+    # 파일 불러오기
     def open_file(self):
         global file, filename
         file = filedialog.askopenfilename(title='파일을 선택하세요',
@@ -227,37 +304,56 @@ class Warehousing_window():
             path_e.delete(0, END)
             path_e.insert(0, filename)
 
-    def save_purchaseFile(self):
-        destination = purchase_dir + '\\' + filename
-        folderName = 'purchase'
-        print('destination')
-        print(destination)
+    # 파일첨부 버튼 실행(구매증명서)
+    def attach_purchaseFile(self):
+        folderName.clear()
+        destination.clear()
+        folderName.append('purchase')
+        destination.append(purchase_dir + '\\' + filename)
+        self.save_file()
 
-        if os.path.exists(destination) == True:
+    # 파일첨부 버튼 실행(원산지증명서)
+    def attach_originFile(self):
+        folderName.clear()
+        destination.clear()
+        folderName.append('origin')
+        destination.append(origin_dir + '\\' + filename)
+        self.save_file()
+
+    def save_file(self):
+        if os.path.exists(destination[0]) == True:
             response = msgbox.askyesno('예/아니오', '해당파일이 존재합니다.\n덮어쓰기를 실행할까요?')
             if response == 1:
-                shutil.copyfile(file, destination)
-                print('복사완료')
+                shutil.copyfile(file, destination[0])
+                msgbox.showinfo('파일저장 완료!', '기존파일을 덮어쓰기하였습니다.')
+                saveFile_win.destroy()
             else:
                 print('덮어쓰기x, 복사x')
                 pass
-        elif os.path.exists(current_dir + f'\\document\\{folderName}\\{sn}') == True :
-            shutil.copyfile(file, destination)
-            print('sjd폴더는 존재, 파일은 없음 -> 복사완료')
-        elif os.path.exists(current_dir + f'\\document\\{folderName}') == True :
-            os.mkdir(current_dir + f'\\document\\{folderName}\\{sn}')
-            shutil.copyfile(file, destination)
-            print('document폴더O, sjd-1폴더 만들고 복사완료')
+        elif os.path.exists(current_dir + f'\\document\\{folderName[0]}\\{sn}') == True :
+            shutil.copyfile(file, destination[0])
+            msgbox.showinfo('파일저장 완료!', '파일첨부를 완료했습니다.')
+            saveFile_win.destroy()
+        elif os.path.exists(current_dir + f'\\document\\{folderName[0]}') == True :
+            os.mkdir(current_dir + f'\\document\\{folderName[0]}\\{sn}')
+            shutil.copyfile(file, destination[0])
+            msgbox.showinfo('파일저장 완료!', '파일첨부를 완료했습니다.')
+            saveFile_win.destroy()
         elif os.path.exists(current_dir + '\\document') == True :
-            os.mkdir(current_dir + f'\\document\\{folderName}')
-            os.mkdir(current_dir + f'\\document\\{folderName}\\{sn}')
-            shutil.copyfile(file, destination)
-            print('document폴더O, purchas폴더 만들고, sjd-1폴더 만들고 복사완료')
+            os.mkdir(current_dir + f'\\document\\{folderName[0]}')
+            os.mkdir(current_dir + f'\\document\\{folderName[0]}\\{sn}')
+            shutil.copyfile(file, destination[0])
+            msgbox.showinfo('파일저장 완료!', '파일첨부를 완료했습니다.')
+            saveFile_win.destroy()
         else :
             os.mkdir(current_dir + '\\document')
-            os.mkdir(current_dir + f'\\document\\{folderName}')
-            os.mkdir(current_dir + f'\\document\\{folderName}\\{sn}')
-            shutil.copyfile(file, destination)
-            print('document폴더만들고, purchas폴더 만들고, sjd-1폴더 만들고 복사완료')
+            os.mkdir(current_dir + f'\\document\\{folderName[0]}')
+            os.mkdir(current_dir + f'\\document\\{folderName[0]}\\{sn}')
+            shutil.copyfile(file, destination[0])
+            msgbox.showinfo('파일저장 완료!', '파일첨부를 완료했습니다.')
+            saveFile_win.destroy()
 
         self.check_certificate()
+
+    def cancel_attache_win(self):
+        saveFile_win.destroy()

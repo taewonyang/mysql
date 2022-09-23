@@ -7,7 +7,7 @@ class Material_Info :
     def __init__(self, window):
         self.window = window
         self.window.geometry('600x600')
-
+        self.window.resizable(False, False)
         self.layout()
         self.create_tree_widget()
         self.tree_data_view()

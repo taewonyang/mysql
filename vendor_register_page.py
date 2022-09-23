@@ -8,7 +8,7 @@ class Register_window():
     def __init__(self, window):
         self.window = window
         self.window.geometry('600x600')
-
+        self.window.resizable(False, False)
         self.layout()
         self.create_tree_widget()
         self.tree_data_view()
@@ -109,7 +109,7 @@ class Register_window():
             cur.execute(''' 
              CREATE TABLE IF NOT EXISTS vendor(
                 vendor_id   INTEGER PRIMARY KEY AUTOINCREMENT,
-                name        TEXT    NOT NULL,
+                vendor_name        TEXT    NOT NULL,
                 current     TEXT    NOT NULL,
                 document    TEXT    NOT NULL
                 )
@@ -160,7 +160,7 @@ class Register_window():
             else :
                 response = msgbox.askyesno('예/아니오', '해당 데이터를 삭제합니까?')
                 if response == 1 :
-                    cur.execute('delete from vendor where name=:con1 and current=:con2 and document=:con3', {"con1":getValue[0], "con2":getValue[1], "con3":getValue[2]})
+                    cur.execute('delete from vendor where vendor_name=:con1 and current=:con2 and document=:con3', {"con1":getValue[0], "con2":getValue[1], "con3":getValue[2]})
                     conn.commit()
                     conn.close()
                     msgbox.showinfo('삭제완료!', '삭제를 완료했습니다.')
@@ -207,7 +207,7 @@ class Register_window():
                     conn = sqlite3.connect('./BOM.db')
                     cur = conn.cursor()
                     update_query = '''
-                    update vendor set name=?, current=?, document=? where name=? and current=? and document=?
+                    update vendor set vendor_name=?, current=?, document=? where vendor_name=? and current=? and document=?
                     '''
                     query_data = (txt1.get(), txt2.get().upper(), txt3.get(), getValue[0], getValue[1], getValue[2])
                     cur.execute(update_query, query_data)
@@ -241,7 +241,7 @@ class Register_window():
         # print('컬럼 인덱스')
         # print(column_index)
         if c ==3 :
-            search_sql = 'select * from vendor where name like ? and current like ? and document like ?'
+            search_sql = 'select * from vendor where vendor_name like ? and current like ? and document like ?'
             cur.execute(search_sql,('%'+name_cmb.get()+'%' , '%'+current_cmb.get()+'%', '%'+document_cmb.get()+'%'))
             rs = cur.fetchall()
         elif c==2 :
