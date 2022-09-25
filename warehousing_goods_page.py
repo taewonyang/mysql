@@ -19,16 +19,15 @@ class Warehousing_window():
         destination = []
 
     def layout(self):
-        global material_cmb, namecode_kor_txt, namecode_eng_txt, kind_txt, hscode_txt, material_txt
-        global vendorName_cmb, document_txt, current_txt, buydate_e, exchangeRate_e, price_e, totalPrice_txt, manufacturer_e, unit_e, origin_e, docMaterial_txt, docOrigin_txt
+        global material_txt
+        global material_cmb, namecode_kor_txt, namecode_eng_txt, kind_txt, hscode_txt, requriedAmount_e, unit_e, ekw_e, manufacturer_e, origin_e
+        global vendorName_cmb, document_txt, current_txt, buydate_e, exchangeRate_e, price_e, current_txt, totalPrice_txt, docMaterial_txt, docOrigin_txt
         title = Label(self.window, text='원자재 입고리스트', font=("Georgia", 15))
         title.place(x=430, y=20)
         material_sn = Label(self.window, text='원자재 품번')
         material_sn.place(x=20, y=50)
-        material_txt = Label(self.window)
+        material_txt = Label(self.window) #원자재 품번
         material_txt.place(x=100, y=50)
-        no =1
-        material_txt.configure(text=f'SJD-{no}')
 
         # 원자재 frame
         material_fr = LabelFrame(self.window, text='Material Info')
@@ -54,7 +53,7 @@ class Warehousing_window():
         origin_lb = Label(material_fr, text='원산지')
         origin_lb.grid(row=0, column=9, padx=5, pady=3)
 
-        material_cmb = ttk.Combobox(material_fr, height=5, width=15)
+        material_cmb = ttk.Combobox(material_fr, height=5, width=15, state='readonly')
         material_cmb.grid(row=1, column=0, padx=5, pady=3)
         namecode_kor_txt = Label(material_fr, width=15)
         namecode_kor_txt.grid(row=1, column=1, padx=5, pady=3)
@@ -103,7 +102,7 @@ class Warehousing_window():
         docOrigin_lb = Label(Purchase_fr, text='원산지증빙서류')
         docOrigin_lb.grid(row=0, column=8, padx=5, pady=3)
 
-        vendorName_cmb = ttk.Combobox(Purchase_fr, height=5, width=15)
+        vendorName_cmb = ttk.Combobox(Purchase_fr, height=5, width=15, state='readonly')
         vendorName_cmb.grid(row=1, column=0, padx=5, pady=3)
         buydate_e = Entry(Purchase_fr, width=10)
         buydate_e.grid(row=1, column=1, padx=5, pady=3)
@@ -131,14 +130,47 @@ class Warehousing_window():
         addfile_btn2.grid(row=0, column=1, padx=1, pady=3)
 
         # 버튼
-        db_insert_btn = Button(self.window, text='save')
+        db_insert_btn = Button(self.window, text='save', command=self.regist)
         db_insert_btn.place(x=830, y=260)
 
     def initialDB(self):
+        material_cmb.set('')
+        namecode_kor_txt.configure(text='')
+        namecode_eng_txt.configure(text='')
+        kind_txt.configure(text='')
+        hscode_txt.configure(text='')
+        requriedAmount_e.delete(0,END)
+        ekw_e.delete(0,END)
+        vendorName_cmb.set('')
+        buydate_e.delete(0,END)
+        exchangeRate_e.delete(0,END)
+        price_e.delete(0,END)
+        current_txt.configure(text='')
+        totalPrice_txt.configure(text='')
+        document_txt.configure(text='')
+        manufacturer_e.delete(0,END)
+        unit_e.delete(0,END)
+        origin_e.delete(0,END)
+
         # 기본설정
         manufacturer_e.insert(0, "미상")
         unit_e.insert(0, "EA")
         origin_e.insert(0, "미상")
+
+        # 원자재품번(sn) 설정
+        conn = sqlite3.connect('./BOM.db')
+        cur = conn.cursor()
+        list_table = cur.execute('''
+                        select name from sqlite_master where type='table' and name='warehoused_list'
+                        ''').fetchall()
+        if list_table == []:
+            print('warehoused_list 테이블이 없습니다.')
+            material_txt.configure(text=f'SJD-1')
+        else :
+            cur.execute('select * from warehoused_list')
+            rs = cur.fetchall()
+            no = int(rs[-1][0]) + 1
+            material_txt.configure(text=f'SJD-{no}')
 
         global purchase_dir, origin_dir, current_dir, sn
         sn = material_txt.cget('text')
@@ -204,7 +236,7 @@ class Warehousing_window():
 
             def changeLabel_purchase(event):
                 sel_name = vendorName_cmb.get()
-                cur.execute('select * from vendor where name=?', (sel_name,))
+                cur.execute('select * from vendor where vendor_name=?', (sel_name,))
                 rs = cur.fetchall()[0]
                 document_txt.configure(text=rs[3])
                 current_txt.configure(text=rs[2])
@@ -226,39 +258,112 @@ class Warehousing_window():
             docOrigin_txt.configure(text='없음', background='#000000', fg='#FFFFFF')
 
     def regist(self):
-        # create table
-        conn = sqlite3.connect('./BOM.db')
-        conn.execute('PRAGMA foreign_keys = ON')
-        cur = conn.cursor()
-        cur.execute(''' 
-                     CREATE TABLE IF NOT EXISTS warehoused_list (
-                        warehoused_id       INTEGER PRIMARY KEY AUTOINCREMENT,
-                        material_sn         TEXT    NOT NULL,
-                        material_name       TEXT    NOT NULL,
-                        namecode_kor        TEXT    NOT NULL,
-                        namecode_eng        TEXT    NOT NULL,
-                        material_kind       TEXT    NOT NULL,
-                        hscode              TEXT    NOT NULL,
-                        requried_amount     INT     NOT NULL,
-                        unit                TEXT    NOT NULL,
-                        ekw                 INT     NOT NULL,
-                        manufacturer        TEXT    NOT NULL,
-                        country_origin      TEXT    NOT NULL,
-                        vendor_name         TEXT    NOT NULL,
-                        buydate             TEXT    NOT NULL,
-                        exchange_rate       FLOAT   NOT NULL,
-                        price               INT     NOT NULL,
-                        current             TEXT    NOT NULL,
-                        total_price         FLOAT   NOT NULL,
-                        document            TEXT    NOT NULL,
-                        purchase_doc_valid  TEXT    NOT NULL,
-                        origin_doc_valid    TEXT    NOT NULL,
-                        vendor_id           INTEGER NOT NULL,
-                        material_id         INTEGER NOT NULL
-                        )
-                     ''')
+        if material_cmb.get() == "":
+            msgbox.showerror("입력오류!", "원자재 규격을 선택해주세요")
+        elif requriedAmount_e.get() == "":
+            msgbox.showerror("입력오류!", "소요량을 입력해주세요")
+        elif unit_e.get() == "":
+            msgbox.showerror("입력오류!", "단위를 입력해주세요")
+        elif ekw_e.get() == "":
+            msgbox.showerror("입력오류!", "구성비를 입력해주세요")
+        elif manufacturer_e.get() == "":
+            msgbox.showerror("입력오류!", "제조사를 입력해주세요")
+        elif origin_e.get() == "":
+            msgbox.showerror("입력오류!", "원산지를 입력해주세요")
+        elif vendorName_cmb.get() == "":
+            msgbox.showerror("입력오류!", "구매처를 선택해주세요")
+        elif buydate_e.get() == "":
+            msgbox.showerror("입력오류!", "구매날짜를 입력해주세요")
+        elif exchangeRate_e.get() == "":
+            msgbox.showerror("입력오류!", "환율을 입력해주세요")
+        elif price_e.get() == "":
+            msgbox.showerror("입력오류!", "단가를 입력해주세요")
+        else:
+            # create table
+            conn = sqlite3.connect('./BOM.db')
+            conn.execute('PRAGMA foreign_keys = ON')
+            cur = conn.cursor()
+            cur.execute(''' 
+                         CREATE TABLE IF NOT EXISTS warehoused_list (
+                            warehoused_id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                            material_sn         TEXT    NOT NULL,
+                            material_name       TEXT    NOT NULL,
+                            namecode_kor        TEXT    NOT NULL,
+                            namecode_eng        TEXT    NOT NULL,
+                            material_kind       TEXT    NOT NULL,
+                            hscode              TEXT    NOT NULL,
+                            requried_amount     INT     NOT NULL,
+                            unit                TEXT    NOT NULL,
+                            ekw                 INT     NOT NULL,
+                            manufacturer        TEXT    NOT NULL,
+                            country_origin      TEXT    NOT NULL,
+                            vendor_name         TEXT    NOT NULL,
+                            buydate             TEXT    NOT NULL,
+                            exchange_rate       FLOAT   NOT NULL,
+                            price               INT     NOT NULL,
+                            current             TEXT    NOT NULL,
+                            total_price         FLOAT   NOT NULL,
+                            document            TEXT    NOT NULL,
+                            purchase_doc_valid  TEXT    NOT NULL,
+                            origin_doc_valid    TEXT    NOT NULL,
+                            vendor_id           INTEGER NOT NULL,
+                            material_id         INTEGER NOT NULL,
+                            FOREIGN KEY (vendor_id) REFERENCES vendor (vendor_id),
+                            FOREIGN KEY (material_id) REFERENCES material_info (material_id)
+                            )
+                         ''')
+            conn.commit()
+            conn.close()
 
 
+            ### insert data into table ###
+            conn = sqlite3.connect('./BOM.db')
+            conn.execute('PRAGMA foreign_keys = ON')
+            cur = conn.cursor()
+            # vendor_id 추출
+            cur.execute('select vendor_id from vendor where vendor_name=:con1 and current=:con2 and document=:con3'
+                        , {"con1":str(vendorName_cmb.get()), "con2":str(current_txt.cget('text')), "con3":str(document_txt.cget('text'))})
+            searched_rs = cur.fetchall()
+            searched_vendor_id = (searched_rs[0][0])
+            # material_id 추출
+            cur.execute('select material_id from material_info where material_name=:con1 and namecode_kor=:con2 and namecode_eng=:con3 and material_kind=:con4 and hscode=:con5'
+                        ,{"con1":str(material_cmb.get()), "con2":str(namecode_kor_txt.cget('text')), "con3":str(namecode_eng_txt.cget('text')), "con4":str(kind_txt.cget('text')), "con5":str(hscode_txt.cget('text'))} )
+            searched_rs = cur.fetchall()
+            searched_material_id = (searched_rs[0][0])
+
+            # 중복여부 체크
+            cur.execute('select * from warehoused_list')
+            rs = cur.fetchall()
+            data = (str(material_cmb.get()), str(namecode_kor_txt.cget('text')), str(namecode_eng_txt.cget('text')), str(kind_txt.cget('text')), str(hscode_txt.cget('text')),
+            str(requriedAmount_e.get()), str(unit_e.get()), str(ekw_e.get()), str(manufacturer_e.get()), str(origin_e.get()),
+            str(vendorName_cmb.get()), str(buydate_e.get()), float(exchangeRate_e.get()), int(price_e.get()), str(current_txt.cget('text')), float(totalPrice_txt.cget('text')), str(document_txt.cget('text'))
+            )
+            overlap_check = []
+            if rs != []:  # DB에 데이터가 있다면
+                for row in rs:
+                    print(row)
+                    if row[2:19] == tuple(data):
+                        print(row[2:19])
+                        overlap_check.append('ok')
+                        break
+            # (데이터O / 중복O)
+            if overlap_check != []:
+                msgbox.showerror('중복오류!', '이미 존재하는 데이터입니다.\n다시 입력해주세요.')
+            # (데이터O / 중복X) or (데이터X)
+            else:
+                data = list(data)
+                data.insert(0, sn)
+                for i in [docMaterial_txt.cget('text'), docOrigin_txt.cget('text'), int(searched_vendor_id), int(searched_material_id)] :
+                    data.append(i)
+                data = tuple(data)
+                print(data)
+                insert_sql = 'INSERT INTO warehoused_list values(NULL,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+                cur.execute(insert_sql, data)
+                msgbox.showinfo('등록완료!', '원자재 정보를 등록하였습니다.')
+                conn.commit()
+                conn.close()
+
+                self.initialDB()
 
     #################### 파일첨부 화면 ##########################
     # 파일첨부 윈도우 오픈(구매증명서)

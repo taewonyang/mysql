@@ -135,8 +135,13 @@ class Material_Info :
                 hscode              TEXT    NOT NULL
                 )
              ''')
+            conn.commit()
+            conn.close()
 
             # insert data into table
+            conn = sqlite3.connect('./BOM.db')
+            conn.execute('PRAGMA foreign_keys = ON')
+            cur = conn.cursor()
             cur.execute('select * from material_info')
             rs = cur.fetchall()
 
