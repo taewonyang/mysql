@@ -9,7 +9,7 @@ import sqlite3
 class Warehousing_window():
     def __init__(self, window):
         self.window = window
-        self.window.geometry('1000x900')
+        self.window.geometry('1200x900')
         self.window.resizable(False, False)
         self.layout()
         self.initialDB()
@@ -131,7 +131,7 @@ class Warehousing_window():
 
         # 버튼
         db_insert_btn = Button(self.window, text='save', command=self.regist)
-        db_insert_btn.place(x=830, y=260)
+        db_insert_btn.place(x=980, y=220)
 
     def initialDB(self):
         material_cmb.set('')
@@ -244,6 +244,56 @@ class Warehousing_window():
             vendorName_cmb.bind("<<ComboboxSelected>>", changeLabel_purchase)
 
         self.check_certificate()
+
+    def create_tree_widget(self):
+        global tree
+        tree_frame = Frame(self.window)
+        tree_frame.place(x=10, y=260, width=900, height=650)
+
+        columns = ('''
+        'sn_col','name_col', 'namecode_kor_col', 'namecode_eng_col', 'material_kind_col','hscode_col',
+        'amount_col', 'unit_col', 'ekw_col', 'manufacturer_col', 'country_origin_col', 'vendor_name_col',
+        'buydate_col', 'exchange_col', 'price_col', 'current_col', 'total_price_col', 'document_col',
+        'purchase_doc_valid_col', 'origin_doc_valid_col', 'vendor_id_col', 'material_id_col'
+        ''')
+        tree = ttk.Treeview(tree_frame, columns=columns, show='headings')
+        tree.heading('sn_col', text='품번', anchor=CENTER)
+        tree.heading('name_col', text='규격', anchor=CENTER)
+        tree.heading('namecode_kor_col', text='품명(국문)', anchor=CENTER)
+        tree.heading('namecode_eng_col', text='품명(영문)', anchor=CENTER)
+        tree.heading('material_kind_col', text='원자재 종류', anchor=CENTER)
+        tree.heading('hscode_col', text='세번', anchor=CENTER)
+        tree.heading('amount_col', text='소요량', anchor=CENTER)
+        tree.heading('unit_col', text='단위', anchor=CENTER)
+        tree.heading('ekw_col', text='구성비', anchor=CENTER)
+        tree.heading('manufacturer_col', text='제조사', anchor=CENTER)
+        tree.heading('country_origin_col', text='원산지', anchor=CENTER)
+        tree.heading('vendor_name_col', text='구매처', anchor=CENTER)
+        tree.heading('buydate_col', text='구매일자', anchor=CENTER)
+        tree.heading('exchange_col', text='환율', anchor=CENTER)
+        tree.heading('vendor_id_col', text='구매정보ID', anchor=CENTER)
+        tree.heading('material_id_col', text='제품정보ID', anchor=CENTER)
+
+        tree.heading('price_col', text='단가', anchor=CENTER)
+        tree.heading('current_col', text='통화', anchor=CENTER)
+        tree.heading('total_price_col', text='합계금액', anchor=CENTER)
+        tree.heading('document_col', text='구매입증서 종류', anchor=CENTER)
+        tree.heading('purchase_doc_valid_col', text='구매입증서류 유무', anchor=CENTER)
+        tree.heading('origin_doc_valid_col', text='원산지증빙서류 유무', anchor=CENTER)
+
+
+        tree.column('name_column', width=100)
+        tree.column('namecode_eng_column', width=60)
+        tree.column('namecode_kor_column', width=100)
+        tree.column('kind_column', width=30, anchor=CENTER)
+        tree.column('hscode_column', width=70, anchor=CENTER)
+        tree.place(relheight=1, relwidth=1)
+
+        scrollbar = Scrollbar(tree_frame, orient="vertical")
+        scrollbar.pack(side=RIGHT, fill=Y)
+        scrollbar.config(command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+
 
 
     def check_certificate(self): # 입증서류 유무 체크
