@@ -20,10 +20,72 @@ class Warehousing_window():
         folderName = []
         destination = []
 
+        # 트리뷰선택 -> 입력창 데이터 자동입력
+        def selectedText(event):
+            selectedItem = tree.focus()
+            getValue = tree.item(selectedItem).get('values')
+            self.cancel()
+            if selectedItem != "":
+                material_txt.configure(text=getValue[0])
+                material_cmb.set(getValue[1])
+                namecode_eng_txt.configure(text=getValue[2])
+                namecode_kor_txt.configure(text=getValue[3])
+                kind_txt.configure(text=getValue[4])
+                hscode_txt.configure(text=getValue[5])
+                requriedAmount_e.insert(0, getValue[6])
+                ekw_e.insert(0, getValue[7].replace('%', ''))
+                manufacturer_e.delete(0, END)
+                manufacturer_e.insert(0, getValue[8])
+                origin_e.delete(0, END)
+                origin_e.insert(0, getValue[9])
+
+                vendorName_cmb.set(getValue[10])
+                buydate_e.insert(0, getValue[11])
+                exchangeRate_e.insert(0, getValue[12])
+                price_e.insert(0, getValue[13])
+                current_txt.configure(text=getValue[14])
+                totalPrice_txt.configure(text=getValue[15])
+                document_txt.configure(text=getValue[16])
+                if getValue[17] == '있음' :
+                    docMaterial_txt.configure(text='있음', background='#6B66FF', fg='#FFFFFF')
+                else:
+                    docMaterial_txt.configure(text='없음', background='#000000', fg='#FFFFFF')
+                if getValue[18] == '있음' :
+                    docOrigin_txt.configure(text='있음', background='#6B66FF', fg='#FFFFFF')
+                else :
+                    docOrigin_txt.configure(text='없음', background='#000000', fg='#FFFFFF')
+
+        tree.bind("<<TreeviewSelect>>", selectedText)
+
+        # 증빙서류 폴더 열기
+        def docMaterial_open_folder(self):
+            if docMaterial_txt.cget('text') =='없음' :
+                msgbox.showinfo('No file', '첨부된 구매입증서류 파일이 없습니다.')
+            else:
+                msgbox.showinfo('첨부파일 열기', '구매입증서류 폴더를 오픈하였습니다. 첨부파일을 확인하세요.')
+                serial = material_txt.cget('text')
+                purchase_dir_path = current_dir + f'\\document\\purchase\\{serial}'
+                path = os.path.realpath(purchase_dir_path)
+                os.startfile(path)
+
+        def docOrigin_open_folder(self):
+            if docOrigin_txt.cget('text') =='없음' :
+                msgbox.showinfo('No file', '첨부된 원산지증빙서류 파일이 없습니다.')
+            else:
+                msgbox.showinfo('첨부파일 열기', '원산지증빙서류 폴더를 오픈하였습니다. 첨부파일을 확인하세요.')
+                serial = material_txt.cget('text')
+                origin_dir_path = current_dir + f'\\document\\origin\\{serial}'
+                path = os.path.realpath(origin_dir_path)
+                os.startfile(path)
+
+        docMaterial_txt.bind("<Double-Button-1>", docMaterial_open_folder)
+        docOrigin_txt.bind("<Double-Button-1>", docOrigin_open_folder)
+
     def layout(self):
         global material_txt
         global material_cmb, namecode_kor_txt, namecode_eng_txt, kind_txt, hscode_txt, requriedAmount_e, unit_e, ekw_e, manufacturer_e, origin_e
         global vendorName_cmb, document_txt, current_txt, buydate_e, exchangeRate_e, price_e, current_txt, totalPrice_txt, docMaterial_txt, docOrigin_txt
+
         title = Label(self.window, text='원자재 입고리스트', font=("Georgia", 15))
         title.place(x=600, y=20)
         material_sn = Label(self.window, text='원자재 품번')
@@ -65,13 +127,13 @@ class Warehousing_window():
         kind_txt.grid(row=1, column=3, padx=5, pady=3)
         hscode_txt = Label(material_fr, width=12)
         hscode_txt.grid(row=1, column=4, padx=5, pady=3)
-        requriedAmount_e = Entry(material_fr, width=7)
+        requriedAmount_e = Entry(material_fr, width=7, justify='center')
         requriedAmount_e.grid(row=1, column=5, padx=5, pady=3)
         unit_e = Entry(material_fr, width=5, justify='center')
         unit_e.grid(row=1, column=6, padx=5, pady=3)
         pack_lb = Label(material_fr)
         pack_lb.grid(row=1, column=7, padx=5, pady=3)
-        ekw_e = Entry(pack_lb, width=9)
+        ekw_e = Entry(pack_lb, width=9, justify='center')
         ekw_e.grid(row=0, column=0, padx=5, pady=3)
         perText_lb = Label(pack_lb, text='%')
         perText_lb.grid(row=0, column=1)
@@ -108,7 +170,7 @@ class Warehousing_window():
         vendorName_cmb.grid(row=1, column=0, padx=5, pady=3)
         buydate_e = Entry(Purchase_fr, width=10)
         buydate_e.grid(row=1, column=1, padx=5, pady=3)
-        exchangeRate_e = Entry(Purchase_fr, width=10)
+        exchangeRate_e = Entry(Purchase_fr, width=10, justify='center')
         exchangeRate_e.grid(row=1, column=2, padx=5, pady=3)
         price_e = Entry(Purchase_fr, width=10)
         price_e.grid(row=1, column=3, padx=5, pady=3)
@@ -132,8 +194,17 @@ class Warehousing_window():
         addfile_btn2.grid(row=0, column=1, padx=1, pady=3)
 
         # 버튼
-        db_insert_btn = Button(self.window, text='save', command=self.regist)
-        db_insert_btn.place(x=980, y=220)
+        btn_Frame = LabelFrame(self.window, text='입고내역 데이터')
+        btn_Frame.place(x=1140, y=180)
+
+        db_insert_btn = Button(btn_Frame, text='  추 가  ', command=self.regist)
+        db_insert_btn.grid(row=0, column=0)
+        db_delete_btn = Button(btn_Frame, text='  삭 제  ')
+        db_delete_btn.grid(row=0, column=1)
+        db_edit_btn = Button(btn_Frame, text='  수 정  ')
+        db_edit_btn.grid(row=0, column=2)
+        cancel_btn = Button(btn_Frame, text='  취 소  ', command=self.cancel)
+        cancel_btn.grid(row=0, column=3)
 
     def initialDB(self):
         material_cmb.set('')
@@ -219,7 +290,6 @@ class Warehousing_window():
                 sel_name = material_cmb.get()
                 cur.execute('select * from material_info where material_name=?', (sel_name,))
                 rs = cur.fetchall()[0]
-                print(rs)
                 namecode_eng_txt.configure(text=rs[2])
                 namecode_kor_txt.configure(text=rs[3])
                 kind_txt.configure(text=rs[4])
@@ -254,7 +324,7 @@ class Warehousing_window():
     def create_tree_widget(self):
         global tree
         tree_frame = Frame(self.window)
-        tree_frame.place(x=10, y=260, width=1480, height=610)
+        tree_frame.place(x=10, y=260, width=1470, height=500)
 
         columns = ('sn_col','name_col', 'namecode_eng_col', 'namecode_kor_col', 'material_kind_col','hscode_col',
         'amount_col', 'ekw_col', 'manufacturer_col', 'country_origin_col', 'vendor_name_col', 'buydate_col',
@@ -292,13 +362,13 @@ class Warehousing_window():
         tree.column('ekw_col', width=50, anchor=CENTER)
         tree.column('manufacturer_col', width=50, anchor=CENTER)
         tree.column('country_origin_col', width=50, anchor=CENTER)
-        tree.column('vendor_name_col', width=100)
+        tree.column('vendor_name_col', width=120)
         tree.column('buydate_col', width=70, anchor=CENTER)
         tree.column('exchange_col', width=50, anchor=CENTER)
         tree.column('price_col', width=60, anchor=CENTER)
         tree.column('current_col', width=40, anchor=CENTER)
-        tree.column('total_price_col', width=100, anchor=CENTER)
-        tree.column('document_col', width=120, anchor=CENTER)
+        tree.column('total_price_col', width=90, anchor=CENTER)
+        tree.column('document_col', width=100, anchor=CENTER)
         tree.column('purchase_doc_valid_col', width=120, anchor=CENTER)
         tree.column('origin_doc_valid_col', width=120, anchor=CENTER)
 
@@ -321,7 +391,6 @@ class Warehousing_window():
             # 트리뷰 새로고침
             cur.execute('select * from warehoused_list')
             rs = cur.fetchall()
-            print(rs)
 
             for i in tree.get_children():
                 tree.delete(i)
@@ -423,7 +492,7 @@ class Warehousing_window():
             cur.execute('select * from warehoused_list')
             rs = cur.fetchall()
             data = (str(material_cmb.get()), str(namecode_eng_txt.cget('text')), str(namecode_kor_txt.cget('text')), str(kind_txt.cget('text')), str(hscode_txt.cget('text')),
-            str(requriedAmount_e.get()), str(unit_e.get()), str(ekw_e.get()), str(manufacturer_e.get()), str(origin_e.get()),
+            str(requriedAmount_e.get()), str(unit_e.get()), str(ekw_e.get())+'%', str(manufacturer_e.get()), str(origin_e.get()),
             str(vendorName_cmb.get()), str(buydate_e.get()), float(exchangeRate_e.get()), int(price_e.get()), str(current_txt.cget('text')), float(totalPrice_txt.cget('text')), str(document_txt.cget('text'))
             )
             overlap_check = []
@@ -450,6 +519,9 @@ class Warehousing_window():
 
                 self.tree_data_view()
                 self.initialDB()
+
+    def cancel(self):
+        self.initialDB()
 
 
     #################### 파일첨부 화면 ##########################
