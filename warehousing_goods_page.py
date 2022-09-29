@@ -9,12 +9,13 @@ import sqlite3
 class Warehousing_window():
     def __init__(self, window):
         self.window = window
-        self.window.geometry('1500x900')
+        self.window.geometry('1500x870')
         self.window.resizable(False, False)
         self.layout()
         self.create_tree_widget()
         self.initialDB()
         self.tree_data_view()
+        self.refresh_searchCmb()
 
         global folderName, destination
         folderName = []
@@ -157,7 +158,7 @@ class Warehousing_window():
         price_lb.grid(row=0, column=3, padx=5, pady=3)
         current_lb = Label(Purchase_fr, text='통화')
         current_lb.grid(row=0, column=4, padx=5, pady=3)
-        totalPrice_lb = Label(Purchase_fr, text='가격')
+        totalPrice_lb = Label(Purchase_fr, text='가격(KRW기준)')
         totalPrice_lb.grid(row=0, column=5, padx=5, pady=3)
         document_lb = Label(Purchase_fr, text='구매입증서류 종류')
         document_lb.grid(row=0, column=6, padx=5, pady=3)
@@ -197,14 +198,51 @@ class Warehousing_window():
         btn_Frame = LabelFrame(self.window, text='입고내역 데이터')
         btn_Frame.place(x=1140, y=180)
 
-        db_insert_btn = Button(btn_Frame, text='  추 가  ', command=self.regist)
-        db_insert_btn.grid(row=0, column=0)
-        db_delete_btn = Button(btn_Frame, text='  삭 제  ')
-        db_delete_btn.grid(row=0, column=1)
-        db_edit_btn = Button(btn_Frame, text='  수 정  ')
-        db_edit_btn.grid(row=0, column=2)
-        cancel_btn = Button(btn_Frame, text='  취 소  ', command=self.cancel)
-        cancel_btn.grid(row=0, column=3)
+        db_insert_btn = Button(btn_Frame, text='  Save  ', command=self.regist)
+        db_insert_btn.grid(row=0, column=0, padx=1, pady=3)
+        cancel_btn = Button(btn_Frame, text='  Cancel  ', command=self.cancel)
+        cancel_btn.grid(row=0, column=1, padx=1, pady=3)
+        db_delete_btn = Button(btn_Frame, text='  Del  ', fg='#FF0000')
+        db_delete_btn.grid(row=0, column=2, padx=9, pady=3)
+        db_edit_btn = Button(btn_Frame, text=' Update ')
+        db_edit_btn.grid(row=0, column=3, padx=3, pady=3)
+
+        # 조회cmb
+        global search_cmb1, search_cmb2, search_cmb3, search_cmb4, search_cmb5, search_cmb6, search_cmb8, search_cmb9, search_cmb10, search_cmb11, search_cmb13, search_cmb14, search_cmb15
+
+        searchFrame = Frame(self.window, width=1480)
+        searchFrame.place(x=10, y=765)
+        search_cmb1 = ttk.Combobox(searchFrame, height=5 ,width=5)
+        search_cmb1.grid(row=0,column=1)
+        search_cmb2 = ttk.Combobox(searchFrame, height=5, width=10)
+        search_cmb2.grid(row=0, column=2)
+        search_cmb3 = ttk.Combobox(searchFrame, height=5, width=7)
+        search_cmb3.grid(row=0, column=3)
+        search_cmb4 = ttk.Combobox(searchFrame, height=5, width=14)
+        search_cmb4.grid(row=0, column=4)
+        search_cmb5 = ttk.Combobox(searchFrame, height=5, width=7)
+        search_cmb5.grid(row=0, column=5)
+        search_cmb6 = ttk.Combobox(searchFrame, height=5, width=8)
+        search_cmb6.grid(row=0, column=6)
+        Label(searchFrame, text='       ', fg='#FFFFFF', width=29).grid(row=0, column=7)
+        search_cmb10 = ttk.Combobox(searchFrame, height=5, width=13)
+        search_cmb10.grid(row=0, column=10)
+        search_cmb11 = ttk.Combobox(searchFrame, height=5, width=9)
+        search_cmb11.grid(row=0, column=11)
+        Label(searchFrame, text='       ', fg='#FFFFFF', width=32).grid(row=0, column=12)
+        search_cmb13 = ttk.Combobox(searchFrame, height=5, width=11)
+        search_cmb13.grid(row=0, column=13)
+        search_cmb14 = ttk.Combobox(searchFrame, height=5, width=12)
+        search_cmb14.grid(row=0, column=14)
+        search_cmb15 = ttk.Combobox(searchFrame, height=5, width=12)
+        search_cmb15.grid(row=0, column=15)
+
+        searchBtn_frame = Frame(self.window)
+        searchBtn_frame.place(x=1340, y=800)
+        search_btn = Button(searchBtn_frame, text=' Search ', padx=5, pady=5, command=self.search)
+        search_btn.grid(row=0, column=0)
+        default_btn = Button(searchBtn_frame, text=' Default ', padx=5, pady=5, command=self.default)
+        default_btn.grid(row=0, column=11)
 
     def initialDB(self):
         material_cmb.set('')
@@ -347,7 +385,7 @@ class Warehousing_window():
         tree.heading('exchange_col', text='환율', anchor=CENTER)
         tree.heading('price_col', text='단가', anchor=CENTER)
         tree.heading('current_col', text='통화', anchor=CENTER)
-        tree.heading('total_price_col', text='합계금액', anchor=CENTER)
+        tree.heading('total_price_col', text='가격(KRW기준)', anchor=CENTER)
         tree.heading('document_col', text='구매입증서 종류', anchor=CENTER)
         tree.heading('purchase_doc_valid_col', text='구매입증서류 유무', anchor=CENTER)
         tree.heading('origin_doc_valid_col', text='원산지증빙서류 유무', anchor=CENTER)
@@ -402,6 +440,68 @@ class Warehousing_window():
             for row in result:
                 tree.insert('', END, values=row[1:])
 
+    def refresh_searchCmb(self):
+        conn = sqlite3.connect('./BOM.db')
+        cur = conn.cursor()
+        cur.execute('select * from warehoused_list')
+        rs = cur.fetchall()
+        searchCmb1_opt =[]
+        searchCmb2_opt =[]
+        searchCmb3_opt =[]
+        searchCmb4_opt =[]
+        searchCmb5_opt =[]
+        searchCmb6_opt =[]
+        searchCmb10_opt =[]
+        searchCmb11_opt =[]
+        searchCmb13_opt =[]
+        searchCmb14_opt =[]
+        searchCmb15_opt =[]
+        for row in rs:
+            if (row[1] in searchCmb1_opt) == False:
+                searchCmb1_opt.append(row[1])
+            if (row[2] in searchCmb2_opt) == False:
+                searchCmb2_opt.append(row[2])
+            if (row[3] in searchCmb3_opt) == False:
+                searchCmb3_opt.append(row[3])
+            if (row[4] in searchCmb4_opt) == False:
+                searchCmb4_opt.append(row[4])
+            if (row[5] in searchCmb5_opt) == False:
+                searchCmb5_opt.append(row[5])
+            if (row[6] in searchCmb6_opt) == False:
+                searchCmb6_opt.append(row[6])
+            if (row[12] in searchCmb10_opt) == False:
+                searchCmb10_opt.append(row[12])
+            if (row[13] in searchCmb11_opt) == False:
+                searchCmb11_opt.append(row[13])
+            if (row[18] in searchCmb13_opt) == False:
+                searchCmb13_opt.append(row[18])
+            if (row[19] in searchCmb14_opt) == False:
+                searchCmb14_opt.append(row[19])
+            if (row[20] in searchCmb15_opt) == False:
+                searchCmb15_opt.append(row[20])
+
+        searchCmb1_opt.sort()
+        searchCmb2_opt.sort()
+        searchCmb3_opt.sort()
+        searchCmb4_opt.sort()
+        searchCmb5_opt.sort()
+        searchCmb6_opt.sort()
+        searchCmb10_opt.sort()
+        searchCmb11_opt.sort()
+        searchCmb13_opt.sort()
+        searchCmb14_opt.sort()
+        searchCmb15_opt.sort()
+        search_cmb1.configure(values=searchCmb1_opt)
+        search_cmb2.configure(values=searchCmb2_opt)
+        search_cmb3.configure(values=searchCmb3_opt)
+        search_cmb4.configure(values=searchCmb4_opt)
+        search_cmb5.configure(values=searchCmb5_opt)
+        search_cmb6.configure(values=searchCmb6_opt)
+        search_cmb10.configure(values=searchCmb10_opt)
+        search_cmb11.configure(values=searchCmb11_opt)
+        search_cmb13.configure(values=searchCmb13_opt)
+        search_cmb14.configure(values=searchCmb14_opt)
+        search_cmb15.configure(values=searchCmb15_opt)
 
     def check_certificate(self): # 입증서류 유무 체크
         if os.path.exists(purchase_dir+'\\') == True :
@@ -519,12 +619,100 @@ class Warehousing_window():
 
                 self.tree_data_view()
                 self.initialDB()
+                self.refresh_searchCmb()
 
     def cancel(self):
         self.initialDB()
 
+    def search(self):
+        conn = sqlite3.connect('./BOM.db')
+        cur = conn.cursor()
+        check_list = [search_cmb1.get(), search_cmb2.get(), search_cmb3.get(), search_cmb4.get(), search_cmb5.get(), search_cmb6.get(), search_cmb10.get(), search_cmb11.get(), search_cmb13.get(), search_cmb14.get(), search_cmb15.get()]
+        c = 0
+        column_index = []
+        searchInfo = []  # (검색순번, 입력값)
+        for i in enumerate(check_list, start=1):
+            if i[1] != "":
+                c = c + 1
+                searchInfo.append(i)
+                column_index.append(i[0])
+        # print('검색하려는값 (검색순번,입력값)')
+        # print(searchInfo)
+        cur.execute('select * from warehoused_list')
+        column_name = [fd[0] for fd in cur.description]  # 테이블의 필드명 가져오기
+        # print(column_name)
+        for i in ['requried_amount', 'unit', 'ekw', 'exchange_rate', 'price', 'current', 'total_price', 'manufacturer', 'country_origin'] :
+            column_name.remove(i)
+        # print('필드명 요소 삭제 후')
+        # print(column_name)
+        # print('컬럼 인덱스')
+        # print(column_index)
+        if c ==11 :
+            search_sql = '''select * from warehoused_list where 
+                material_sn like ? and material_name like ? and namecode_eng like ? and namecode_kor like ? and
+                material_kind like ? and hscode like ? and vendor_name like ? and buydate like ? and
+                document like ? and purchase_doc_valid like ? and origin_doc_valid like ? 
+                '''
+            cur.execute(search_sql,('%'+search_cmb1.get()+'%' , '%'+search_cmb2.get()+'%', '%'+search_cmb3.get()+'%', '%'+search_cmb4.get()+'%', '%'+search_cmb5.get()+'%', '%'+str(search_cmb6.get())+'%', '%'+search_cmb8.get()+'%', '%'+search_cmb9.get()+'%', '%'+search_cmb10.get()+'%', '%'+search_cmb11.get()+'%', '%'+search_cmb13.get()+'%', '%'+search_cmb14.get()+'%', '%'+search_cmb15.get()+'%'))
+            rs = cur.fetchall()
+        elif c==10 :
+            search_sql = f'''select * from warehoused_list where 
+                {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
+                {column_name[column_index[3]]} like ? and {column_name[column_index[4]]} like ? and {column_name[column_index[5]]} like ? and
+                {column_name[column_index[6]]} like ? and {column_name[column_index[7]]} like ? and {column_name[column_index[8]]} like ? and
+                {column_name[column_index[9]]} like ?'''
 
-    #################### 파일첨부 화면 ##########################
+            search_txt1 = searchInfo[0][1]
+            search_txt2 = searchInfo[1][1]
+            search_txt3 = searchInfo[2][1]
+            search_txt4 = searchInfo[3][1]
+            search_txt5 = searchInfo[4][1]
+            search_txt6 = searchInfo[5][1]
+            search_txt7 = searchInfo[6][1]
+            search_txt8 = searchInfo[7][1]
+            search_txt9 = searchInfo[8][1]
+            search_txt10 = searchInfo[9][1]
+
+            cur.execute(search_sql, ('%'+search_txt1+'%' , '%'+search_txt2+'%', '%'+search_txt3+'%', '%'+search_txt4+'%', '%'+search_txt5+'%', '%'+search_txt6+'%', '%'+search_txt7+'%', '%'+search_txt8+'%', '%'+search_txt9+'%', '%'+search_txt10+'%'))
+            rs = cur.fetchall()
+        # elif c==1 :
+        #     search_sql = f'select * from vendor where {column_name[column_index[0]]} like ?'
+        #     search_txt = searchInfo[0][1]
+        #     cur.execute(search_sql, ('%'+search_txt+'%',))
+        #     rs = cur.fetchall()
+        # elif c==0 :
+        #     cur.execute('select * from vendor')
+        #     rs = cur.fetchall()
+
+
+        # 트리뷰 view
+        for i in tree.get_children():
+            tree.delete(i)
+        result = []
+        for one in rs:
+            one = list(one)
+            del one[8]
+            result.append(one)
+        for row in result:
+            tree.insert('', END, values=row[1:])
+
+    def default(self):
+        search_cmb1.set("")
+        search_cmb2.set("")
+        search_cmb3.set("")
+        search_cmb4.set("")
+        search_cmb5.set("")
+        search_cmb6.set("")
+        search_cmb8.set("")
+        search_cmb9.set("")
+        search_cmb10.set("")
+        search_cmb11.set("")
+        search_cmb13.set("")
+        search_cmb14.set("")
+        search_cmb15.set("")
+
+
+    ################################ 파일첨부 화면 ######################################
     # 파일첨부 윈도우 오픈(구매증명서)
     def open_attachWin_purchase(self):
         self.open_attachWin()
