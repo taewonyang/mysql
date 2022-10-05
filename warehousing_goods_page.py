@@ -208,7 +208,7 @@ class Warehousing_window():
         db_edit_btn.grid(row=0, column=3, padx=3, pady=3)
 
         # 조회cmb
-        global search_cmb1, search_cmb2, search_cmb3, search_cmb4, search_cmb5, search_cmb6, search_cmb8, search_cmb9, search_cmb10, search_cmb11, search_cmb13, search_cmb14, search_cmb15
+        global search_cmb1, search_cmb2, search_cmb3, search_cmb4, search_cmb5, search_cmb6, search_cmb10, search_cmb11, search_cmb13, search_cmb14, search_cmb15
 
         searchFrame = Frame(self.window, width=1480)
         searchFrame.place(x=10, y=725)
@@ -645,42 +645,45 @@ class Warehousing_window():
             column_name.remove(i)
         # print('필드명 요소 삭제 후')
         # print(column_name)
-        # print('컬럼 인덱스')
+        # print('검색 컬럼 인덱스(1부터 시작)')
         # print(column_index)
 
-        result = []
-        def filter(num):
-            sql_txt = ""
-            search_txt = ""
-            for i in range(0, num):
-                # sql_txt 만들기
-                if i != num - 1:
-                    txt = sql_txt + '{column_name[column_index[' + str(i) + ']]} like ? and '
-                    sql_txt = ""
-                    sql_txt = sql_txt + txt
-                elif i == num - 1:
-                    txt = sql_txt + '{column_name[column_index[' + str(i) + ']]} like ?'
-                    sql_txt = ""
-                    sql_txt = sql_txt + txt
+        # result = []
+        # def filter(num):
+        #     sql_txt = ""
+        #     search_txt = ""
+        #     for i in range(0, num):
+        #         # sql_txt 만들기
+        #         if i != num - 1:
+        #             txt = sql_txt + '{column_name[column_index[' + str(i) + ']]} like ? and '
+        #             sql_txt = ""
+        #             sql_txt = sql_txt + txt
+        #         elif i == num - 1:
+        #             txt = sql_txt + '{column_name[column_index[' + str(i) + ']]} like ?'
+        #             sql_txt = ""
+        #             sql_txt = sql_txt + txt
+        #
+        #         # search_txt 만들기
+        #         if i != num - 1:
+        #             re_txt = search_txt + "'%'+" + 'searchInfo[' + str(i) + '][1]' + "+'%', "
+        #             search_txt = ""
+        #             search_txt = search_txt + re_txt
+        #         elif i == num - 1:
+        #             re_txt = search_txt + "'%'+" + 'searchInfo[' + str(i) + '][1]' + "+'%'"
+        #             search_txt = ""
+        #             search_txt = search_txt + re_txt
+        #     result.clear()
+        #     result.append(sql_txt)
+        #     result.append(search_txt)
 
-                # search_txt 만들기
-                if i != num - 1:
-                    re_txt = search_txt + "'%'+" + 'searchInfo[' + str(i) + '][1]' + "+'%', "
-                    search_txt = ""
-                    search_txt = search_txt + re_txt
-                elif i == num - 1:
-                    re_txt = search_txt + "'%'+" + 'searchInfo[' + str(i) + '][1]' + "+'%'"
-                    search_txt = ""
-                    search_txt = search_txt + re_txt
-
-
-            result.append(sql_txt)
-            result.append(search_txt)
-
-
-        # filter(10)
-        # search_sql = "f'select * from warehoused_list where " + result[0] + "'"
-        # print(search_sql)
+        # elif c == 10:
+        #     filter(10)
+        #     search_sql = f"\'" + "select * from warehoused_list where " + result[0] + "\'"
+        #     # search_sql = "f'''select * from warehoused_list where " + result[0] +"'''"
+        #     print(search_sql.format())
+        #     print(result[1])
+        #     cur.execute(search_sql, result[1])
+        #     rs = cur.fetchall()
 
         if c ==11 :
             search_sql = '''select * from warehoused_list where
@@ -688,54 +691,151 @@ class Warehousing_window():
                 material_kind like ? and hscode like ? and vendor_name like ? and buydate like ? and
                 document like ? and purchase_doc_valid like ? and origin_doc_valid like ?
                 '''
-            cur.execute(search_sql,('%'+search_cmb1.get()+'%' , '%'+search_cmb2.get()+'%', '%'+search_cmb3.get()+'%', '%'+search_cmb4.get()+'%', '%'+search_cmb5.get()+'%', '%'+str(search_cmb6.get())+'%', '%'+search_cmb8.get()+'%', '%'+search_cmb9.get()+'%', '%'+search_cmb10.get()+'%', '%'+search_cmb11.get()+'%', '%'+search_cmb13.get()+'%', '%'+search_cmb14.get()+'%', '%'+search_cmb15.get()+'%'))
+            cur.execute(search_sql,('%'+search_cmb1.get()+'%' , '%'+search_cmb2.get()+'%', '%'+search_cmb3.get()+'%', '%'+search_cmb4.get()+'%', '%'+search_cmb5.get()+'%', '%'+str(search_cmb6.get())+'%', '%'+search_cmb10.get()+'%', '%'+search_cmb11.get()+'%', '%'+search_cmb13.get()+'%', '%'+search_cmb14.get()+'%', '%'+search_cmb15.get()+'%'))
             rs = cur.fetchall()
-
-        elif c == 10:
-            filter(10)
-            search_sql = "f'select * from warehoused_list where " + result[0] +"'"
-            print(search_sql)
-            print(result[1])
-            cur.execute(search_sql, result[1])
+        elif c==10 :
+            search_sql = f'''select * from warehoused_list where
+                {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
+                {column_name[column_index[3]]} like ? and {column_name[column_index[4]]} like ? and {column_name[column_index[5]]} like ? and
+                {column_name[column_index[6]]} like ? and {column_name[column_index[7]]} like ? and {column_name[column_index[8]]} like ? and
+                {column_name[column_index[9]]} like ?'''
+            search_txt1 = searchInfo[0][1]
+            search_txt2 = searchInfo[1][1]
+            search_txt3 = searchInfo[2][1]
+            search_txt4 = searchInfo[3][1]
+            search_txt5 = searchInfo[4][1]
+            search_txt6 = searchInfo[5][1]
+            search_txt7 = searchInfo[6][1]
+            search_txt8 = searchInfo[7][1]
+            search_txt9 = searchInfo[8][1]
+            search_txt10 = searchInfo[9][1]
+            cur.execute(search_sql, ('%'+search_txt1+'%' , '%'+search_txt2+'%', '%'+search_txt3+'%', '%'+search_txt4+'%', '%'+search_txt5+'%', '%'+search_txt6+'%', '%'+search_txt7+'%', '%'+search_txt8+'%', '%'+search_txt9+'%', '%'+search_txt10+'%'))
             rs = cur.fetchall()
-
-        # elif c==10 :
-        #     search_sql = f'''select * from warehoused_list where
-        #         {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
-        #         {column_name[column_index[3]]} like ? and {column_name[column_index[4]]} like ? and {column_name[column_index[5]]} like ? and
-        #         {column_name[column_index[6]]} like ? and {column_name[column_index[7]]} like ? and {column_name[column_index[8]]} like ? and
-        #         {column_name[column_index[9]]} like ?'''
-        #
-        #     search_txt1 = searchInfo[0][1]
-        #     search_txt2 = searchInfo[1][1]
-        #     search_txt3 = searchInfo[2][1]
-        #     search_txt4 = searchInfo[3][1]
-        #     search_txt5 = searchInfo[4][1]
-        #     search_txt6 = searchInfo[5][1]
-        #     search_txt7 = searchInfo[6][1]
-        #     search_txt8 = searchInfo[7][1]
-        #     search_txt9 = searchInfo[8][1]
-        #     search_txt10 = searchInfo[9][1]
-        #
-        #     cur.execute(search_sql, ('%'+search_txt1+'%' , '%'+search_txt2+'%', '%'+search_txt3+'%', '%'+search_txt4+'%', '%'+search_txt5+'%', '%'+search_txt6+'%', '%'+search_txt7+'%', '%'+search_txt8+'%', '%'+search_txt9+'%', '%'+search_txt10+'%'))
-        #     rs = cur.fetchall()
-        # elif c==1 :
-        #     search_sql = f'select * from vendor where {column_name[column_index[0]]} like ?'
-        #     search_txt = searchInfo[0][1]
-        #     cur.execute(search_sql, ('%'+search_txt+'%',))
-        #     rs = cur.fetchall()
-        # elif c==0 :
-        #     cur.execute('select * from vendor')
-        #     rs = cur.fetchall()
-
+        elif c==9 :
+            search_sql = f'''select * from warehoused_list where
+               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
+               {column_name[column_index[3]]} like ? and {column_name[column_index[4]]} like ? and {column_name[column_index[5]]} like ? and
+               {column_name[column_index[6]]} like ? and {column_name[column_index[7]]} like ? and {column_name[column_index[8]]} like ?'''
+            search_txt1 = searchInfo[0][1]
+            search_txt2 = searchInfo[1][1]
+            search_txt3 = searchInfo[2][1]
+            search_txt4 = searchInfo[3][1]
+            search_txt5 = searchInfo[4][1]
+            search_txt6 = searchInfo[5][1]
+            search_txt7 = searchInfo[6][1]
+            search_txt8 = searchInfo[7][1]
+            search_txt9 = searchInfo[8][1]
+            cur.execute(search_sql, (
+            '%' + search_txt1 + '%', '%' + search_txt2 + '%', '%' + search_txt3 + '%', '%' + search_txt4 + '%',
+            '%' + search_txt5 + '%', '%' + search_txt6 + '%', '%' + search_txt7 + '%', '%' + search_txt8 + '%',
+            '%' + search_txt9 + '%'))
+            rs = cur.fetchall()
+        elif c==8 :
+            search_sql = f'''select * from warehoused_list where
+               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
+               {column_name[column_index[3]]} like ? and {column_name[column_index[4]]} like ? and {column_name[column_index[5]]} like ? and
+               {column_name[column_index[6]]} like ? and {column_name[column_index[7]]} like ?'''
+            search_txt1 = searchInfo[0][1]
+            search_txt2 = searchInfo[1][1]
+            search_txt3 = searchInfo[2][1]
+            search_txt4 = searchInfo[3][1]
+            search_txt5 = searchInfo[4][1]
+            search_txt6 = searchInfo[5][1]
+            search_txt7 = searchInfo[6][1]
+            search_txt8 = searchInfo[7][1]
+            cur.execute(search_sql, (
+            '%' + search_txt1 + '%', '%' + search_txt2 + '%', '%' + search_txt3 + '%', '%' + search_txt4 + '%',
+            '%' + search_txt5 + '%', '%' + search_txt6 + '%', '%' + search_txt7 + '%', '%' + search_txt8 + '%'
+            ))
+            rs = cur.fetchall()
+        elif c==7 :
+            search_sql = f'''select * from warehoused_list where
+               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
+               {column_name[column_index[3]]} like ? and {column_name[column_index[4]]} like ? and {column_name[column_index[5]]} like ? and
+               {column_name[column_index[6]]} like ?'''
+            search_txt1 = searchInfo[0][1]
+            search_txt2 = searchInfo[1][1]
+            search_txt3 = searchInfo[2][1]
+            search_txt4 = searchInfo[3][1]
+            search_txt5 = searchInfo[4][1]
+            search_txt6 = searchInfo[5][1]
+            search_txt7 = searchInfo[6][1]
+            cur.execute(search_sql, (
+            '%' + search_txt1 + '%', '%' + search_txt2 + '%', '%' + search_txt3 + '%', '%' + search_txt4 + '%',
+            '%' + search_txt5 + '%', '%' + search_txt6 + '%', '%' + search_txt7 + '%'))
+            rs = cur.fetchall()
+        elif c==6 :
+            search_sql = f'''select * from warehoused_list where
+               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
+               {column_name[column_index[3]]} like ? and {column_name[column_index[4]]} like ? and {column_name[column_index[5]]} like ?'''
+            search_txt1 = searchInfo[0][1]
+            search_txt2 = searchInfo[1][1]
+            search_txt3 = searchInfo[2][1]
+            search_txt4 = searchInfo[3][1]
+            search_txt5 = searchInfo[4][1]
+            search_txt6 = searchInfo[5][1]
+            cur.execute(search_sql, (
+            '%' + search_txt1 + '%', '%' + search_txt2 + '%', '%' + search_txt3 + '%', '%' + search_txt4 + '%',
+            '%' + search_txt5 + '%', '%' + search_txt6 + '%'))
+            rs = cur.fetchall()
+        elif c==5 :
+            search_sql = f'''select * from warehoused_list where
+               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
+               {column_name[column_index[3]]} like ? and {column_name[column_index[4]]} like ?'''
+            search_txt1 = searchInfo[0][1]
+            search_txt2 = searchInfo[1][1]
+            search_txt3 = searchInfo[2][1]
+            search_txt4 = searchInfo[3][1]
+            search_txt5 = searchInfo[4][1]
+            cur.execute(search_sql, (
+            '%' + search_txt1 + '%', '%' + search_txt2 + '%', '%' + search_txt3 + '%', '%' + search_txt4 + '%',
+            '%' + search_txt5 + '%'))
+            rs = cur.fetchall()
+        elif c==4 :
+            search_sql = f'''select * from warehoused_list where
+               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
+               {column_name[column_index[3]]} like ?'''
+            search_txt1 = searchInfo[0][1]
+            search_txt2 = searchInfo[1][1]
+            search_txt3 = searchInfo[2][1]
+            search_txt4 = searchInfo[3][1]
+            cur.execute(search_sql, (
+            '%' + search_txt1 + '%', '%' + search_txt2 + '%', '%' + search_txt3 + '%', '%' + search_txt4 + '%'))
+            rs = cur.fetchall()
+        elif c==3 :
+            search_sql = f'''select * from warehoused_list where
+               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ?'''
+            search_txt1 = searchInfo[0][1]
+            search_txt2 = searchInfo[1][1]
+            search_txt3 = searchInfo[2][1]
+            cur.execute(search_sql, (
+            '%' + search_txt1 + '%', '%' + search_txt2 + '%', '%' + search_txt3 + '%'))
+            rs = cur.fetchall()
+        elif c==2 :
+            search_sql = f'''select * from warehoused_list where
+               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ?'''
+            search_txt1 = searchInfo[0][1]
+            search_txt2 = searchInfo[1][1]
+            cur.execute(search_sql, (
+            '%' + search_txt1 + '%', '%' + search_txt2 + '%'))
+            rs = cur.fetchall()
+        elif c==1 :
+            search_sql = f'select * from warehoused_list where {column_name[column_index[0]]} like ?'
+            search_txt = searchInfo[0][1]
+            cur.execute(search_sql, ('%'+search_txt+'%',))
+            rs = cur.fetchall()
+        elif c==0 :
+            cur.execute('select * from warehoused_list')
+            rs = cur.fetchall()
 
         #트리뷰 view
         for i in tree.get_children():
             tree.delete(i)
+        # print(rs)
         result = []
         for one in rs:
             one = list(one)
-            del one[8]
+            del one[8] # EA (단위)삭제
             result.append(one)
         for row in result:
             tree.insert('', END, values=row[1:])
@@ -747,8 +847,6 @@ class Warehousing_window():
         search_cmb4.set("")
         search_cmb5.set("")
         search_cmb6.set("")
-        search_cmb8.set("")
-        search_cmb9.set("")
         search_cmb10.set("")
         search_cmb11.set("")
         search_cmb13.set("")
