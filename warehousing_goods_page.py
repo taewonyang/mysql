@@ -202,9 +202,9 @@ class Warehousing_window():
         db_insert_btn.grid(row=0, column=0, padx=1, pady=3)
         cancel_btn = Button(btn_Frame, text='  Cancel  ', command=self.cancel)
         cancel_btn.grid(row=0, column=1, padx=1, pady=3)
-        db_delete_btn = Button(btn_Frame, text='  Del  ', fg='#FF0000')
+        db_delete_btn = Button(btn_Frame, text='  Del  ', fg='#FF0000', command=self.remove)
         db_delete_btn.grid(row=0, column=2, padx=9, pady=3)
-        db_edit_btn = Button(btn_Frame, text=' Update ')
+        db_edit_btn = Button(btn_Frame, text=' Update ', command=self.edit)
         db_edit_btn.grid(row=0, column=3, padx=3, pady=3)
 
         # 조회cmb
@@ -592,7 +592,7 @@ class Warehousing_window():
             cur.execute('select * from warehoused_list')
             rs = cur.fetchall()
             data = (str(material_cmb.get()), str(namecode_eng_txt.cget('text')), str(namecode_kor_txt.cget('text')), str(kind_txt.cget('text')), str(hscode_txt.cget('text')),
-            str(requriedAmount_e.get()), str(unit_e.get()), str(ekw_e.get())+'%', str(manufacturer_e.get()), str(origin_e.get()),
+            int(requriedAmount_e.get()), str(unit_e.get()), str(str(ekw_e.get())+'%'), str(manufacturer_e.get()), str(origin_e.get()),
             str(vendorName_cmb.get()), str(buydate_e.get()), float(exchangeRate_e.get()), int(price_e.get()), str(current_txt.cget('text')), float(totalPrice_txt.cget('text')), str(document_txt.cget('text'))
             )
             overlap_check = []
@@ -623,6 +623,109 @@ class Warehousing_window():
 
     def cancel(self):
         self.initialDB()
+
+    def remove(self):
+        conn = sqlite3.connect('./BOM.db')
+        cur = conn.cursor()
+        list_table = cur.execute('''
+                        select name from sqlite_master where type='table' and name='warehoused_list'
+                        ''').fetchall()
+        if list_table == []:
+            msgbox.showerror('선택 오류', '삭제할 데이터를 선택해주세요.')
+        else:
+            selectedItem = tree.focus()
+            getValue = tree.item(selectedItem).get('values')
+            if selectedItem == "":
+                msgbox.showerror('선택 오류', '삭제할 데이터를 선택해주세요.')
+            else:
+                response = msgbox.askyesno('예/아니오', '해당 데이터를 삭제합니까?')
+                if response == 1:
+                    cur.execute('delete from warehoused_list where material_sn = ?', (material_txt.cget('text'),))
+                    conn.commit()
+                    conn.close()
+                    msgbox.showinfo('삭제완료!', '삭제를 완료했습니다.')
+
+                    self.tree_data_view()
+                    self.cancel()
+                elif response == 0:
+                    return
+
+    def edit(self):
+        selectedItem = tree.focus()
+        getValue = tree.item(selectedItem).get('values')
+        if selectedItem == "" :
+            msgbox.showerror('선택 오류', '수정할 데이터를 선택해주세요.')
+        else :
+            if material_cmb.get() == "":
+                msgbox.showerror("입력오류!", "원자재 규격을 선택해주세요")
+            elif requriedAmount_e.get() == "":
+                msgbox.showerror("입력오류!", "소요량을 입력해주세요")
+            elif unit_e.get() == "":
+                msgbox.showerror("입력오류!", "단위를 입력해주세요")
+            elif ekw_e.get() == "":
+                msgbox.showerror("입력오류!", "구성비를 입력해주세요")
+            elif manufacturer_e.get() == "":
+                msgbox.showerror("입력오류!", "제조사를 입력해주세요")
+            elif origin_e.get() == "":
+                msgbox.showerror("입력오류!", "원산지를 입력해주세요")
+            elif vendorName_cmb.get() == "":
+                msgbox.showerror("입력오류!", "구매처를 선택해주세요")
+            elif buydate_e.get() == "":
+                msgbox.showerror("입력오류!", "구매날짜를 입력해주세요")
+            elif exchangeRate_e.get() == "":
+                msgbox.showerror("입력오류!", "환율을 입력해주세요")
+            elif price_e.get() == "":
+                msgbox.showerror("입력오류!", "단가를 입력해주세요")
+            else:
+                response = msgbox.askyesno('예/아니오', '입력된 내용으로 수정하시겠습니까?')
+                if response == 1:
+                    conn = sqlite3.connect('./BOM.db')
+                    cur = conn.cursor()
+
+                    # vendor_id 추출
+                    cur.execute(
+                        'select vendor_id from vendor where vendor_name=:con1 and current=:con2 and document=:con3'
+                        , {"con1": str(vendorName_cmb.get()), "con2": str(current_txt.cget('text')),
+                           "con3": str(document_txt.cget('text'))})
+                    searched_rs = cur.fetchall()
+                    searched_vendor_id = (searched_rs[0][0])
+                    # material_id 추출
+                    cur.execute(
+                        'select material_id from material_info where material_name=:con1 and namecode_kor=:con2 and namecode_eng=:con3 and material_kind=:con4 and hscode=:con5'
+                        , {"con1": str(material_cmb.get()), "con2": str(namecode_eng_txt.cget('text')),
+                           "con3": str(namecode_kor_txt.cget('text')), "con4": str(kind_txt.cget('text')),
+                           "con5": str(hscode_txt.cget('text'))})
+                    searched_rs = cur.fetchall()
+                    searched_material_id = (searched_rs[0][0])
+
+                    update_query = '''
+                    update warehoused_list set material_name=?, namecode_eng=?, namecode_kor=?, material_kind=?, hscode=?,
+                                         requried_amount=?, unit=?, ekw=?, manufacturer=?, country_origin=?, vendor_name=?,
+                                         buydate=?, exchange_rate=?, price=?, current=?, total_price=?, document=?,
+                                         purchase_doc_valid=?, origin_doc_valid=?, vendor_id=?, material_id=?
+                                where material_sn = ?
+                    '''
+                    query_data = (
+                    str(material_cmb.get()), str(namecode_eng_txt.cget('text')), str(namecode_kor_txt.cget('text')),
+                    str(kind_txt.cget('text')), str(hscode_txt.cget('text')), int(requriedAmount_e.get()), str(unit_e.get()),
+                    str(str(ekw_e.get()) + '%'), str(manufacturer_e.get()), str(origin_e.get()), str(vendorName_cmb.get()),
+                    str(buydate_e.get()), float(exchangeRate_e.get()), int(price_e.get()), str(current_txt.cget('text')),
+                    float(totalPrice_txt.cget('text')), str(document_txt.cget('text'))
+                    )
+                    query_data = list(query_data)
+                    for i in [docMaterial_txt.cget('text'), docOrigin_txt.cget('text'), int(searched_vendor_id),
+                              int(searched_material_id),  material_txt.cget('text')]:
+                        query_data.append(i)
+                    query_data = tuple(query_data)
+                    print(query_data)
+                    cur.execute(update_query, query_data)
+                    msgbox.showinfo('수정완료!', '데이터가 수정되었습니다.')
+                    conn.commit()
+                    conn.close()
+
+                    self.tree_data_view()
+                else :
+                    return
 
     def search(self):
         conn = sqlite3.connect('./BOM.db')
@@ -853,6 +956,19 @@ class Warehousing_window():
         search_cmb14.set("")
         search_cmb15.set("")
 
+        conn = sqlite3.connect('./BOM.db')
+        cur = conn.cursor()
+        cur.execute('select * from warehoused_list')
+        rs = cur.fetchall()
+        for i in tree.get_children():
+            tree.delete(i)
+        result = []
+        for one in rs:
+            one = list(one)
+            del one[8]  # EA (단위)삭제
+            result.append(one)
+        for row in result:
+            tree.insert('', END, values=row[1:])
 
     ################################ 파일첨부 화면 ######################################
     # 파일첨부 윈도우 오픈(구매증명서)
