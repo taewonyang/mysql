@@ -147,17 +147,11 @@ class Material_Info :
 
             # 중복여부 체크
             data = (str(name_e.get()), str(namecode_eng_cmb.get()), str(namecode_kor_txt.cget('text')), str(kind_txt.cget('text')),str(hscode_e.get()))
-            overlap_check = []
             if rs != []:  # DB에 데이터가 있다면
                 for row in rs:
-                    print(row)
-                    if row[1:] == tuple(data):
-                        overlap_check.append('ok')
+                    if str(row[1]) == str(name_e.get()) : # (데이터O / 중복O)
+                        msgbox.showerror('중복오류!', '동일한 원자재 규격이 존재합니다.\n다시 입력해주세요.')
                         break
-            # (데이터O / 중복O)
-            if overlap_check != []:
-                msgbox.showerror('중복오류!', '이미 존재하는 데이터입니다.\n다시 입력해주세요.')
-            # (데이터O / 중복X) or (데이터X)
             else:
                 insert_sql = 'INSERT INTO material_info values(NULL,?,?,?,?,?)'
                 cur.execute(insert_sql, data)
@@ -216,20 +210,49 @@ class Material_Info :
             elif hscode_e.get== "" :
                 msgbox.showerror("입력오류!", "변경할 세번(HS CODE)를 입력해주세요")
             else:
-                response = msgbox.askyesno('예/아니오', '입력된 내용으로 수정하시겠습니까?')
-                if response == 1:
-                    conn = sqlite3.connect('./BOM.db')
-                    cur = conn.cursor()
-                    update_query = '''
-                    update material_info set material_name=?, namecode_kor=?, namecode_eng=?, material_kind=?, hscode=?
-                        where material_name=? and namecode_kor=? and namecode_eng=? and material_kind=? and hscode=?
-                    '''
-                    query_data = (name_e.get(), namecode_eng_cmb.get(), namecode_kor_txt.cget('text'), kind_txt.cget('text'), hscode_e.get(), getValue[0], getValue[1], getValue[2], getValue[3], getValue[4])
-                    cur.execute(update_query, query_data)
-                    msgbox.showinfo('수정완료!', '데이터가 수정되었습니다.')
-                    conn.commit()
-                    conn.close()
+                conn = sqlite3.connect('./BOM.db')
+                cur = conn.cursor()
+                cur.execute('select material_id from material_info where material_name = ?', (getValue[0],))
+                rs = cur.fetchall()
+                selected_id = rs[0][0]  # 선택된 항목의 material_id
+                conn.commit()
+                conn.close()
 
-                    self.tree_data_view()
+                # 규격 중복확인
+                conn = sqlite3.connect('./BOM.db')
+                cur = conn.cursor()
+                cur.execute('select * from material_info')
+                rs = cur.fetchall()
+
+                overlap_check = []
+                for i in rs:
+                    if int(i[0]) != int(selected_id) :  # 선택된 항목의 id가 아닌 데이터들 중에서,
+                        if str(i[1]) == str(name_e.get()):  # 동일한 규격이 존재하면
+                            overlap_check.append('규격중복')
+                if overlap_check != [] :
+                    msgbox.showerror('중복오류!', '동일한 원자재 규격이 존재합니다.\n수정되는 규격명을 다시 입력해주세요.')
                 else :
-                    return
+                    response = msgbox.askyesno('예/아니오', '입력된 내용으로 수정하시겠습니까?')
+                    if response == 1:
+                        update_query = '''
+                                        update material_info set material_name=?, namecode_kor=?, namecode_eng=?, material_kind=?, hscode=?
+                                            where material_name=? and namecode_kor=? and namecode_eng=? and material_kind=? and hscode=?
+                                        '''
+                        query_data = (
+                        name_e.get(), namecode_eng_cmb.get(), namecode_kor_txt.cget('text'), kind_txt.cget('text'),
+                        hscode_e.get(), getValue[0], getValue[1], getValue[2], getValue[3], getValue[4])
+                        cur.execute(update_query, query_data)
+                        msgbox.showinfo('수정완료!', '데이터가 수정되었습니다.')
+                        conn.commit()
+                        conn.close()
+
+                        self.tree_data_view()
+                    else:
+                        return
+
+
+
+
+
+
+
