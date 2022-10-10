@@ -443,65 +443,71 @@ class Warehousing_window():
     def refresh_searchCmb(self):
         conn = sqlite3.connect('./BOM.db')
         cur = conn.cursor()
-        cur.execute('select * from warehoused_list')
-        rs = cur.fetchall()
-        searchCmb1_opt =[]
-        searchCmb2_opt =[]
-        searchCmb3_opt =[]
-        searchCmb4_opt =[]
-        searchCmb5_opt =[]
-        searchCmb6_opt =[]
-        searchCmb10_opt =[]
-        searchCmb11_opt =[]
-        searchCmb13_opt =[]
-        searchCmb14_opt =[]
-        searchCmb15_opt =[]
-        for row in rs:
-            if (row[1] in searchCmb1_opt) == False:
-                searchCmb1_opt.append(row[1])
-            if (row[2] in searchCmb2_opt) == False:
-                searchCmb2_opt.append(row[2])
-            if (row[3] in searchCmb3_opt) == False:
-                searchCmb3_opt.append(row[3])
-            if (row[4] in searchCmb4_opt) == False:
-                searchCmb4_opt.append(row[4])
-            if (row[5] in searchCmb5_opt) == False:
-                searchCmb5_opt.append(row[5])
-            if (row[6] in searchCmb6_opt) == False:
-                searchCmb6_opt.append(row[6])
-            if (row[12] in searchCmb10_opt) == False:
-                searchCmb10_opt.append(row[12])
-            if (row[13] in searchCmb11_opt) == False:
-                searchCmb11_opt.append(row[13])
-            if (row[18] in searchCmb13_opt) == False:
-                searchCmb13_opt.append(row[18])
-            if (row[19] in searchCmb14_opt) == False:
-                searchCmb14_opt.append(row[19])
-            if (row[20] in searchCmb15_opt) == False:
-                searchCmb15_opt.append(row[20])
+        list_table = cur.execute('''
+            select name from sqlite_master where type='table' and name='warehoused_list'
+            ''').fetchall()
+        if list_table == []:
+            print('warehoused_list 테이블이 없습니다.')
+        else:
+            cur.execute('select * from warehoused_list')
+            rs = cur.fetchall()
+            searchCmb1_opt =[]
+            searchCmb2_opt =[]
+            searchCmb3_opt =[]
+            searchCmb4_opt =[]
+            searchCmb5_opt =[]
+            searchCmb6_opt =[]
+            searchCmb10_opt =[]
+            searchCmb11_opt =[]
+            searchCmb13_opt =[]
+            searchCmb14_opt =[]
+            searchCmb15_opt =[]
+            for row in rs:
+                if (row[1] in searchCmb1_opt) == False:
+                    searchCmb1_opt.append(row[1])
+                if (row[2] in searchCmb2_opt) == False:
+                    searchCmb2_opt.append(row[2])
+                if (row[3] in searchCmb3_opt) == False:
+                    searchCmb3_opt.append(row[3])
+                if (row[4] in searchCmb4_opt) == False:
+                    searchCmb4_opt.append(row[4])
+                if (row[5] in searchCmb5_opt) == False:
+                    searchCmb5_opt.append(row[5])
+                if (row[6] in searchCmb6_opt) == False:
+                    searchCmb6_opt.append(row[6])
+                if (row[12] in searchCmb10_opt) == False:
+                    searchCmb10_opt.append(row[12])
+                if (row[13] in searchCmb11_opt) == False:
+                    searchCmb11_opt.append(row[13])
+                if (row[18] in searchCmb13_opt) == False:
+                    searchCmb13_opt.append(row[18])
+                if (row[19] in searchCmb14_opt) == False:
+                    searchCmb14_opt.append(row[19])
+                if (row[20] in searchCmb15_opt) == False:
+                    searchCmb15_opt.append(row[20])
 
-        searchCmb1_opt.sort()
-        searchCmb2_opt.sort()
-        searchCmb3_opt.sort()
-        searchCmb4_opt.sort()
-        searchCmb5_opt.sort()
-        searchCmb6_opt.sort()
-        searchCmb10_opt.sort()
-        searchCmb11_opt.sort()
-        searchCmb13_opt.sort()
-        searchCmb14_opt.sort()
-        searchCmb15_opt.sort()
-        search_cmb1.configure(values=searchCmb1_opt)
-        search_cmb2.configure(values=searchCmb2_opt)
-        search_cmb3.configure(values=searchCmb3_opt)
-        search_cmb4.configure(values=searchCmb4_opt)
-        search_cmb5.configure(values=searchCmb5_opt)
-        search_cmb6.configure(values=searchCmb6_opt)
-        search_cmb10.configure(values=searchCmb10_opt)
-        search_cmb11.configure(values=searchCmb11_opt)
-        search_cmb13.configure(values=searchCmb13_opt)
-        search_cmb14.configure(values=searchCmb14_opt)
-        search_cmb15.configure(values=searchCmb15_opt)
+            searchCmb1_opt.sort()
+            searchCmb2_opt.sort()
+            searchCmb3_opt.sort()
+            searchCmb4_opt.sort()
+            searchCmb5_opt.sort()
+            searchCmb6_opt.sort()
+            searchCmb10_opt.sort()
+            searchCmb11_opt.sort()
+            searchCmb13_opt.sort()
+            searchCmb14_opt.sort()
+            searchCmb15_opt.sort()
+            search_cmb1.configure(values=searchCmb1_opt)
+            search_cmb2.configure(values=searchCmb2_opt)
+            search_cmb3.configure(values=searchCmb3_opt)
+            search_cmb4.configure(values=searchCmb4_opt)
+            search_cmb5.configure(values=searchCmb5_opt)
+            search_cmb6.configure(values=searchCmb6_opt)
+            search_cmb10.configure(values=searchCmb10_opt)
+            search_cmb11.configure(values=searchCmb11_opt)
+            search_cmb13.configure(values=searchCmb13_opt)
+            search_cmb14.configure(values=searchCmb14_opt)
+            search_cmb15.configure(values=searchCmb15_opt)
 
     def check_certificate(self): # 입증서류 유무 체크
         if os.path.exists(purchase_dir+'\\') == True :
@@ -565,8 +571,12 @@ class Warehousing_window():
                             origin_doc_valid    TEXT    NOT NULL,
                             vendor_id           INTEGER NOT NULL,
                             material_id         INTEGER NOT NULL,
-                            FOREIGN KEY (vendor_id) REFERENCES vendor (vendor_id),
+                            FOREIGN KEY (vendor_id) REFERENCES vendor (vendor_id)
+                                ON UPDATE CASCADE
+                                ON DELETE CASCADE,
                             FOREIGN KEY (material_id) REFERENCES material_info (material_id)
+                                ON UPDATE CASCADE
+                                ON DELETE CASCADE
                             )
                          ''')
             conn.commit()
@@ -583,7 +593,7 @@ class Warehousing_window():
             searched_rs = cur.fetchall()
             searched_vendor_id = (searched_rs[0][0])
             # material_id 추출
-            cur.execute('select material_id from material_info where material_name=:con1 and namecode_kor=:con2 and namecode_eng=:con3 and material_kind=:con4 and hscode=:con5'
+            cur.execute('select material_id from material_info where material_name=:con1 and namecode_eng=:con2 and namecode_kor=:con3 and material_kind=:con4 and hscode=:con5'
                         ,{"con1":str(material_cmb.get()), "con2":str(namecode_eng_txt.cget('text')), "con3":str(namecode_kor_txt.cget('text')), "con4":str(kind_txt.cget('text')), "con5":str(hscode_txt.cget('text'))} )
             searched_rs = cur.fetchall()
             searched_material_id = (searched_rs[0][0])

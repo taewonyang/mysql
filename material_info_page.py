@@ -129,8 +129,8 @@ class Material_Info :
              CREATE TABLE IF NOT EXISTS material_info(
                 material_id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 material_name       TEXT    NOT NULL,
-                namecode_kor        TEXT    NOT NULL,
                 namecode_eng        TEXT    NOT NULL,
+                namecode_kor        TEXT    NOT NULL,
                 material_kind       TEXT    NOT NULL,
                 hscode              TEXT    NOT NULL
                 )
@@ -144,15 +144,26 @@ class Material_Info :
             cur = conn.cursor()
             cur.execute('select * from material_info')
             rs = cur.fetchall()
-
             # 중복여부 체크
-            data = (str(name_e.get()), str(namecode_eng_cmb.get()), str(namecode_kor_txt.cget('text')), str(kind_txt.cget('text')),str(hscode_e.get()))
+            data = (str(name_e.get()), str(namecode_eng_cmb.get()), str(namecode_kor_txt.cget('text')), str(kind_txt.cget('text')), str(hscode_e.get()))
             if rs != []:  # DB에 데이터가 있다면
+                overlap_check = []
                 for row in rs:
                     if str(row[1]) == str(name_e.get()) : # (데이터O / 중복O)
+                        overlap_check.append('중복존재')
                         msgbox.showerror('중복오류!', '동일한 원자재 규격이 존재합니다.\n다시 입력해주세요.')
                         break
-            else:
+                if overlap_check == []:
+                    insert_sql = 'INSERT INTO material_info values(NULL,?,?,?,?,?)'
+                    cur.execute(insert_sql, data)
+                    msgbox.showinfo('등록완료!', '원자재 정보를 등록하였습니다.')
+                    conn.commit()
+                    conn.close()
+
+                    self.tree_data_view()
+                    self.cancel()
+
+            else: # DB에 데이터가 없다면
                 insert_sql = 'INSERT INTO material_info values(NULL,?,?,?,?,?)'
                 cur.execute(insert_sql, data)
                 msgbox.showinfo('등록완료!', '원자재 정보를 등록하였습니다.')
@@ -186,7 +197,7 @@ class Material_Info :
                 response = msgbox.askyesno('예/아니오', '해당 데이터를 삭제합니까?')
                 if response == 1:
                     cur.execute('''delete from material_info 
-                                where material_name=:con1 and namecode_kor=:con2 and namecode_eng=:con3
+                                where material_name=:con1 and namecode_eng=:con2 and namecode_kor=:con3 
                                     and material_kind=:con4 and hscode=:con5''',
                                 {"con1": getValue[0], "con2": getValue[1], "con3": getValue[2], "con4": getValue[3], "con5": getValue[4]})
                     conn.commit()
@@ -235,12 +246,13 @@ class Material_Info :
                     response = msgbox.askyesno('예/아니오', '입력된 내용으로 수정하시겠습니까?')
                     if response == 1:
                         update_query = '''
-                                        update material_info set material_name=?, namecode_kor=?, namecode_eng=?, material_kind=?, hscode=?
-                                            where material_name=? and namecode_kor=? and namecode_eng=? and material_kind=? and hscode=?
+                                        update material_info set material_name=?, namecode_eng=?, namecode_kor=?, material_kind=?, hscode=?
+                                            where material_name=? and namecode_eng=? and namecode_kor=? and material_kind=? and hscode=?
                                         '''
                         query_data = (
-                        name_e.get(), namecode_eng_cmb.get(), namecode_kor_txt.cget('text'), kind_txt.cget('text'),
-                        hscode_e.get(), getValue[0], getValue[1], getValue[2], getValue[3], getValue[4])
+                            name_e.get(), namecode_eng_cmb.get(), namecode_kor_txt.cget('text'), kind_txt.cget('text'),
+                            hscode_e.get(), getValue[0], getValue[1], getValue[2], getValue[3], getValue[4]
+                        )
                         cur.execute(update_query, query_data)
                         msgbox.showinfo('수정완료!', '데이터가 수정되었습니다.')
                         conn.commit()
@@ -249,10 +261,3 @@ class Material_Info :
                         self.tree_data_view()
                     else:
                         return
-
-
-
-
-
-
-
