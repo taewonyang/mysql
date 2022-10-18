@@ -61,6 +61,7 @@ class Register_window():
     def tree_data_view(self):
         global name_opt, current_opt, document_opt
         conn = sqlite3.connect('./BOM.db')
+        conn.execute("PRAGMA foreign_keys = 1")
         cur = conn.cursor()
         list_table = cur.execute('''
         select name from sqlite_master where type='table' and name='vendor'
@@ -104,7 +105,7 @@ class Register_window():
         else:
             # create table
             conn = sqlite3.connect('./BOM.db')
-            conn.execute('PRAGMA foreign_keys = ON')
+            conn.execute("PRAGMA foreign_keys = 1")
             cur = conn.cursor()
             cur.execute(''' 
              CREATE TABLE IF NOT EXISTS vendor(
@@ -119,7 +120,7 @@ class Register_window():
 
             # insert data into table
             conn = sqlite3.connect('./BOM.db')
-            conn.execute('PRAGMA foreign_keys = ON')
+            conn.execute("PRAGMA foreign_keys = 1")
             cur = conn.cursor()
             cur.execute('select * from vendor')
             rs = cur.fetchall()
@@ -151,6 +152,7 @@ class Register_window():
 
     def remove(self):
         conn = sqlite3.connect('./BOM.db')
+        conn.execute("PRAGMA foreign_keys = 1")
         cur = conn.cursor()
         list_table = cur.execute('''
                 select name from sqlite_master where type='table' and name='vendor'
@@ -210,6 +212,7 @@ class Register_window():
                     msgbox.showerror("입력오류!", "구매입증서류를 입력해주세요")
                 else:
                     conn = sqlite3.connect('./BOM.db')
+                    conn.execute("PRAGMA foreign_keys = 1")
                     cur = conn.cursor()
                     update_query = '''
                     update vendor set vendor_name=?, current=?, document=? where vendor_name=? and current=? and document=?

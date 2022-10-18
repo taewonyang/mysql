@@ -98,6 +98,7 @@ class Material_Info :
 
     def tree_data_view(self):
         conn = sqlite3.connect('./BOM.db')
+        conn.execute("PRAGMA foreign_keys = 1")
         cur = conn.cursor()
         list_table = cur.execute('''
                 select name from sqlite_master where type='table' and name='material_info'
@@ -123,7 +124,7 @@ class Material_Info :
         else:
             # create table
             conn = sqlite3.connect('./BOM.db')
-            conn.execute('PRAGMA foreign_keys = ON')
+            conn.execute("PRAGMA foreign_keys = 1")
             cur = conn.cursor()
             cur.execute(''' 
              CREATE TABLE IF NOT EXISTS material_info(
@@ -140,7 +141,7 @@ class Material_Info :
 
             # insert data into table
             conn = sqlite3.connect('./BOM.db')
-            conn.execute('PRAGMA foreign_keys = ON')
+            conn.execute("PRAGMA foreign_keys = 1")
             cur = conn.cursor()
             cur.execute('select * from material_info')
             rs = cur.fetchall()
@@ -182,6 +183,7 @@ class Material_Info :
 
     def remove(self):
         conn = sqlite3.connect('./BOM.db')
+        conn.execute("PRAGMA foreign_keys = 1")
         cur = conn.cursor()
         list_table = cur.execute('''
                         select name from sqlite_master where type='table' and name='material_info'
@@ -222,6 +224,7 @@ class Material_Info :
                 msgbox.showerror("입력오류!", "변경할 세번(HS CODE)를 입력해주세요")
             else:
                 conn = sqlite3.connect('./BOM.db')
+                conn.execute("PRAGMA foreign_keys = 1")
                 cur = conn.cursor()
                 cur.execute('select material_id from material_info where material_name = ?', (getValue[0],))
                 rs = cur.fetchall()
@@ -231,6 +234,7 @@ class Material_Info :
 
                 # 규격 중복확인
                 conn = sqlite3.connect('./BOM.db')
+                conn.execute("PRAGMA foreign_keys = 1")
                 cur = conn.cursor()
                 cur.execute('select * from material_info')
                 rs = cur.fetchall()

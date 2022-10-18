@@ -270,6 +270,7 @@ class Warehousing_window():
 
         # 원자재품번(sn) 설정
         conn = sqlite3.connect('./BOM.db')
+        conn.execute("PRAGMA foreign_keys = 1")
         cur = conn.cursor()
         list_table = cur.execute('''
                         select name from sqlite_master where type='table' and name='warehoused_list'
@@ -309,6 +310,7 @@ class Warehousing_window():
 
         # 콤보박스 리스트 뿌려주기
         conn = sqlite3.connect('BOM.db')
+        conn.execute("PRAGMA foreign_keys = 1")
         cur = conn.cursor()
 
         # 1)원자재
@@ -419,6 +421,7 @@ class Warehousing_window():
 
     def tree_data_view(self):
         conn = sqlite3.connect('./BOM.db')
+        conn.execute("PRAGMA foreign_keys = 1")
         cur = conn.cursor()
         list_table = cur.execute('''
                 select name from sqlite_master where type='table' and name='warehoused_list'
@@ -442,6 +445,7 @@ class Warehousing_window():
 
     def refresh_searchCmb(self):
         conn = sqlite3.connect('./BOM.db')
+        conn.execute("PRAGMA foreign_keys = 1")
         cur = conn.cursor()
         list_table = cur.execute('''
             select name from sqlite_master where type='table' and name='warehoused_list'
@@ -544,7 +548,7 @@ class Warehousing_window():
         else:
             # create table
             conn = sqlite3.connect('./BOM.db')
-            conn.execute('PRAGMA foreign_keys = ON')
+            conn.execute("PRAGMA foreign_keys = 1")
             cur = conn.cursor()
             cur.execute(''' 
                          CREATE TABLE IF NOT EXISTS warehoused_list (
@@ -555,7 +559,7 @@ class Warehousing_window():
                             namecode_kor        TEXT    NOT NULL,
                             material_kind       TEXT    NOT NULL,
                             hscode              TEXT    NOT NULL,
-                            requried_amount     INT     NOT NULL,
+                            requried_amount     FLOAT   NOT NULL,
                             unit                TEXT    NOT NULL,
                             ekw                 INT     NOT NULL,
                             manufacturer        TEXT    NOT NULL,
@@ -569,14 +573,10 @@ class Warehousing_window():
                             document            TEXT    NOT NULL,
                             purchase_doc_valid  TEXT    NOT NULL,
                             origin_doc_valid    TEXT    NOT NULL,
-                            vendor_id           INTEGER NOT NULL,
-                            material_id         INTEGER NOT NULL,
-                            FOREIGN KEY (vendor_id) REFERENCES vendor (vendor_id)
-                                ON UPDATE CASCADE
-                                ON DELETE CASCADE,
-                            FOREIGN KEY (material_id) REFERENCES material_info (material_id)
-                                ON UPDATE CASCADE
-                                ON DELETE CASCADE
+                            vendor_id           INT     NOT NULL,
+                            material_id         INT     NOT NULL,
+                            FOREIGN KEY (vendor_id) REFERENCES vendor (vendor_id) ON UPDATE CASCADE,
+                            FOREIGN KEY (material_id) REFERENCES material_info (material_id) ON UPDATE CASCADE
                             )
                          ''')
             conn.commit()
@@ -585,7 +585,7 @@ class Warehousing_window():
 
             ### insert data into table ###
             conn = sqlite3.connect('./BOM.db')
-            conn.execute('PRAGMA foreign_keys = ON')
+            conn.execute("PRAGMA foreign_keys = 1")
             cur = conn.cursor()
             # vendor_id 추출
             cur.execute('select vendor_id from vendor where vendor_name=:con1 and current=:con2 and document=:con3'
@@ -602,7 +602,7 @@ class Warehousing_window():
             cur.execute('select * from warehoused_list')
             rs = cur.fetchall()
             data = (str(material_cmb.get()), str(namecode_eng_txt.cget('text')), str(namecode_kor_txt.cget('text')), str(kind_txt.cget('text')), str(hscode_txt.cget('text')),
-            int(requriedAmount_e.get()), str(unit_e.get()), str(str(ekw_e.get())+'%'), str(manufacturer_e.get()), str(origin_e.get()),
+            float(requriedAmount_e.get()), str(unit_e.get()), str(str(ekw_e.get())+'%'), str(manufacturer_e.get()), str(origin_e.get()),
             str(vendorName_cmb.get()), str(buydate_e.get()), float(exchangeRate_e.get()), int(price_e.get()), str(current_txt.cget('text')), float(totalPrice_txt.cget('text')), str(document_txt.cget('text'))
             )
             overlap_check = []
@@ -636,6 +636,7 @@ class Warehousing_window():
 
     def remove(self):
         conn = sqlite3.connect('./BOM.db')
+        conn.execute("PRAGMA foreign_keys = 1")
         cur = conn.cursor()
         list_table = cur.execute('''
                         select name from sqlite_master where type='table' and name='warehoused_list'
@@ -690,6 +691,7 @@ class Warehousing_window():
                 response = msgbox.askyesno('예/아니오', '입력된 내용으로 수정하시겠습니까?')
                 if response == 1:
                     conn = sqlite3.connect('./BOM.db')
+                    conn.execute("PRAGMA foreign_keys = 1")
                     cur = conn.cursor()
 
                     # vendor_id 추출
@@ -739,6 +741,7 @@ class Warehousing_window():
 
     def search(self):
         conn = sqlite3.connect('./BOM.db')
+        conn.execute("PRAGMA foreign_keys = 1")
         cur = conn.cursor()
         check_list = [search_cmb1.get(), search_cmb2.get(), search_cmb3.get(), search_cmb4.get(), search_cmb5.get(), search_cmb6.get(), search_cmb10.get(), search_cmb11.get(), search_cmb13.get(), search_cmb14.get(), search_cmb15.get()]
         c = 0
@@ -967,6 +970,7 @@ class Warehousing_window():
         search_cmb15.set("")
 
         conn = sqlite3.connect('./BOM.db')
+        conn.execute("PRAGMA foreign_keys = 1")
         cur = conn.cursor()
         cur.execute('select * from warehoused_list')
         rs = cur.fetchall()
