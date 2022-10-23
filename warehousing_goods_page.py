@@ -588,22 +588,34 @@ class Warehousing_window():
             conn.execute("PRAGMA foreign_keys = 1")
             cur = conn.cursor()
             # vendor_id 추출
-            cur.execute('select vendor_id from vendor where vendor_name=:con1 and current=:con2 and document=:con3'
-                        , {"con1":str(vendorName_cmb.get()), "con2":str(current_txt.cget('text')), "con3":str(document_txt.cget('text'))})
+            cur.execute('select * from vendor where vendor_name=:con1 and current=:con2 and document=:con3',
+                        {"con1":str(vendorName_cmb.get()), "con2":str(current_txt.cget('text')), "con3":str(document_txt.cget('text'))})
             searched_rs = cur.fetchall()
+            print('여기')
+            print(searched_rs)
             searched_vendor_id = (searched_rs[0][0])
+            searched_vendor_name = (searched_rs[0][1])
+            searched_vendor_current = (searched_rs[0][2])
+            searched_vendor_document = (searched_rs[0][3])
             # material_id 추출
-            cur.execute('select material_id from material_info where material_name=:con1 and namecode_eng=:con2 and namecode_kor=:con3 and material_kind=:con4 and hscode=:con5'
+            cur.execute('select * from material_info where material_name=:con1 and namecode_eng=:con2 and namecode_kor=:con3 and material_kind=:con4 and hscode=:con5'
                         ,{"con1":str(material_cmb.get()), "con2":str(namecode_eng_txt.cget('text')), "con3":str(namecode_kor_txt.cget('text')), "con4":str(kind_txt.cget('text')), "con5":str(hscode_txt.cget('text'))} )
             searched_rs = cur.fetchall()
+            print('여기2')
+            print(searched_rs)
             searched_material_id = (searched_rs[0][0])
+            searched_material_name = (searched_rs[0][1])
+            searched_material_namecode_eng = (searched_rs[0][2])
+            searched_material_namecode_kor = (searched_rs[0][3])
+            searched_material_kind = (searched_rs[0][4])
+            searched_material_hscode = (searched_rs[0][5])
 
             # 중복여부 체크
             cur.execute('select * from warehoused_list')
             rs = cur.fetchall()
-            data = (str(material_cmb.get()), str(namecode_eng_txt.cget('text')), str(namecode_kor_txt.cget('text')), str(kind_txt.cget('text')), str(hscode_txt.cget('text')),
+            data = (str(searched_material_name), str(searched_material_namecode_eng), str(searched_material_namecode_kor), str(searched_material_kind), str(searched_material_hscode),
             float(requriedAmount_e.get()), str(unit_e.get()), str(str(ekw_e.get())+'%'), str(manufacturer_e.get()), str(origin_e.get()),
-            str(vendorName_cmb.get()), str(buydate_e.get()), float(exchangeRate_e.get()), int(price_e.get()), str(current_txt.cget('text')), float(totalPrice_txt.cget('text')), str(document_txt.cget('text'))
+            str(searched_vendor_name), str(buydate_e.get()), float(exchangeRate_e.get()), int(price_e.get()), str(searched_vendor_current), float(totalPrice_txt.cget('text')), str(searched_vendor_document)
             )
             overlap_check = []
             if rs != []:  # DB에 데이터가 있다면
