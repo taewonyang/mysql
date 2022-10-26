@@ -15,7 +15,7 @@ class Warehousing_window():
         self.create_tree_widget()
         self.initialDB()
         self.tree_data_view()
-        self.refresh_searchCmb()
+        # self.refresh_searchCmb()
 
         global folderName, destination
         folderName = []
@@ -27,7 +27,7 @@ class Warehousing_window():
             getValue = tree.item(selectedItem).get('values')
             self.cancel()
             if selectedItem != "":
-                material_txt.configure(text=getValue[0])
+                sn_txt.configure(text=getValue[0])
                 material_cmb.set(getValue[1])
                 namecode_eng_txt.configure(text=getValue[2])
                 namecode_kor_txt.configure(text=getValue[3])
@@ -64,7 +64,7 @@ class Warehousing_window():
                 msgbox.showinfo('No file', '첨부된 구매입증서류 파일이 없습니다.')
             else:
                 msgbox.showinfo('첨부파일 열기', '구매입증서류 폴더를 오픈하였습니다. 첨부파일을 확인하세요.')
-                serial = material_txt.cget('text')
+                serial = sn_txt.cget('text')
                 purchase_dir_path = current_dir + f'\\document\\purchase\\{serial}'
                 path = os.path.realpath(purchase_dir_path)
                 os.startfile(path)
@@ -74,7 +74,7 @@ class Warehousing_window():
                 msgbox.showinfo('No file', '첨부된 원산지증빙서류 파일이 없습니다.')
             else:
                 msgbox.showinfo('첨부파일 열기', '원산지증빙서류 폴더를 오픈하였습니다. 첨부파일을 확인하세요.')
-                serial = material_txt.cget('text')
+                serial = sn_txt.cget('text')
                 origin_dir_path = current_dir + f'\\document\\origin\\{serial}'
                 path = os.path.realpath(origin_dir_path)
                 os.startfile(path)
@@ -83,22 +83,22 @@ class Warehousing_window():
         docOrigin_txt.bind("<Double-Button-1>", docOrigin_open_folder)
 
     def layout(self):
-        global material_txt
+        global sn_txt
         global material_cmb, namecode_kor_txt, namecode_eng_txt, kind_txt, hscode_txt, requriedAmount_e, unit_e, ekw_e, manufacturer_e, origin_e
         global vendorName_cmb, document_txt, current_txt, buydate_e, exchangeRate_e, price_e, current_txt, totalPrice_txt, docMaterial_txt, docOrigin_txt
 
         title = Label(self.window, text='원자재 입고리스트', font=("Georgia", 15))
         title.place(x=600, y=20)
-        material_sn = Label(self.window, text='원자재 품번')
-        material_sn.place(x=20, y=50)
-        material_txt = Label(self.window) #원자재 품번
-        material_txt.place(x=100, y=50)
+        warehoused_sn_lb = Label(self.window, text='원자재 입고 품번:')
+        warehoused_sn_lb.place(x=20, y=50)
+        sn_txt = Label(self.window) #원자재 입고 품번
+        sn_txt.place(x=120, y=50)
 
         # 원자재 frame
         material_fr = LabelFrame(self.window, text='Material Info')
         material_fr.place(x=20, y=80)
-        material_name = Label(material_fr, text='원자재 규격')
-        material_name.grid(row=0, column=0, padx=5, pady=3)
+        material_name_lb = Label(material_fr, text='원자재 규격')
+        material_name_lb.grid(row=0, column=0, padx=5, pady=3)
         namecode_eng_lb = Label(material_fr, text='원자재 품명(영문)')
         namecode_eng_lb.grid(row=0, column=1, padx=5, pady=3)
         namecode_kor_lb = Label(material_fr, text='원자재 품명(국문)')
@@ -277,18 +277,18 @@ class Warehousing_window():
                         ''').fetchall()
         if list_table == []:
             print('warehoused_list 테이블이 없습니다.')
-            material_txt.configure(text=f'SJD-1')
+            sn_txt.configure(text=f'SJD-1')
         else :
             cur.execute('select * from warehoused_list')
             rs = cur.fetchall()
             if rs == [] :
-                material_txt.configure(text=f'SJD-1')
+                sn_txt.configure(text=f'SJD-1')
             else :
                 no = int(rs[-1][0]) + 1
-                material_txt.configure(text=f'SJD-{no}')
+                sn_txt.configure(text=f'SJD-{no}')
 
         global purchase_dir, origin_dir, current_dir, sn
-        sn = material_txt.cget('text')
+        sn = sn_txt.cget('text')
         current_dir = os.getcwd()
         purchase_dir = current_dir + f'\\document\\purchase\\{sn}'
         origin_dir = current_dir + f'\\document\\origin\\{sn}'
@@ -364,13 +364,13 @@ class Warehousing_window():
     def create_tree_widget(self):
         global tree
         tree_frame = Frame(self.window)
-        tree_frame.place(x=10, y=260, width=1470, height=460)
+        tree_frame.place(x=10, y=260, width=1445, height=460)
 
         columns = ('sn_col','name_col', 'namecode_eng_col', 'namecode_kor_col', 'material_kind_col','hscode_col',
         'amount_col', 'ekw_col', 'manufacturer_col', 'country_origin_col', 'vendor_name_col', 'buydate_col',
         'exchange_col', 'price_col', 'current_col', 'total_price_col', 'document_col', 'purchase_doc_valid_col',
-        'origin_doc_valid_col', 'warehoused_id_col', 'vendor_id_col', 'material_id_col'
-        )
+        'origin_doc_valid_col', 'btn_col')
+
         tree = ttk.Treeview(tree_frame, columns=columns, show='headings')
         tree.heading('sn_col', text='품번', anchor=CENTER)
         tree.heading('name_col', text='규격', anchor=CENTER)
@@ -391,6 +391,7 @@ class Warehousing_window():
         tree.heading('document_col', text='구매입증서 종류', anchor=CENTER)
         tree.heading('purchase_doc_valid_col', text='구매입증서류 유무', anchor=CENTER)
         tree.heading('origin_doc_valid_col', text='원산지증빙서류 유무', anchor=CENTER)
+        tree.heading('btn_col', text='    ', anchor=CENTER)
 
         tree.column('sn_col', width=60, anchor=CENTER)
         tree.column('name_col', width=90, anchor=CENTER)
@@ -409,9 +410,9 @@ class Warehousing_window():
         tree.column('current_col', width=40, anchor=CENTER)
         tree.column('total_price_col', width=90, anchor=CENTER)
         tree.column('document_col', width=100, anchor=CENTER)
-        tree.column('purchase_doc_valid_col', width=120, anchor=CENTER)
-        tree.column('origin_doc_valid_col', width=120, anchor=CENTER)
-
+        tree.column('purchase_doc_valid_col', width=110, anchor=CENTER)
+        tree.column('origin_doc_valid_col', width=110, anchor=CENTER)
+        tree.column('btn_col', width=50, anchor=CENTER)
 
         tree.place(relheight=1, relwidth=1)
         scrollbar = Scrollbar(tree_frame, orient="vertical")
@@ -438,7 +439,36 @@ class Warehousing_window():
             result =[]
             for one in rs:
                 one = list(one)
-                del one[8]
+                del one[4] # 단위 EA 제거
+                print(one)
+
+                # vendor 테이블의 데이터 추출
+                cur.execute('select * from vendor where vendor_id=?', (one[12],))
+                searched_rs = cur.fetchall()
+                print(searched_rs)
+                searched_vendor_name = searched_rs[0][1]
+                searched_current = searched_rs[0][2]
+                searched_document = searched_rs[0][3]
+
+                # material 테이블의 데이터 추출
+                cur.execute('select * from material_info where material_id=?', (one[13],))
+                searched_rs = cur.fetchall()
+                searched_material_name = searched_rs[0][1]
+                searched_namecode_eng = searched_rs[0][2]
+                searched_namecode_kor = searched_rs[0][3]
+                searched_material_kind = searched_rs[0][4]
+                searched_hscode = searched_rs[0][5]
+
+                one.insert(2, searched_material_name)
+                one.insert(3, searched_namecode_eng)
+                one.insert(4, searched_namecode_kor)
+                one.insert(5, searched_material_kind)
+                one.insert(6, searched_hscode)
+                one.insert(11, searched_vendor_name)
+                one.insert(13, searched_current)
+                one.insert(17, searched_document)
+                del one[20:22]
+
                 result.append(one)
             for row in result:
                 tree.insert('', END, values=row[1:])
@@ -553,24 +583,16 @@ class Warehousing_window():
             cur.execute(''' 
                          CREATE TABLE IF NOT EXISTS warehoused_list (
                             warehoused_id       INTEGER PRIMARY KEY AUTOINCREMENT,
-                            material_sn         TEXT    NOT NULL,
-                            material_name       TEXT    NOT NULL,
-                            namecode_eng        TEXT    NOT NULL,
-                            namecode_kor        TEXT    NOT NULL,
-                            material_kind       TEXT    NOT NULL,
-                            hscode              TEXT    NOT NULL,
+                            warehoused_sn       TEXT    NOT NULL,
                             requried_amount     FLOAT   NOT NULL,
                             unit                TEXT    NOT NULL,
                             ekw                 INT     NOT NULL,
                             manufacturer        TEXT    NOT NULL,
                             country_origin      TEXT    NOT NULL,
-                            vendor_name         TEXT    NOT NULL,
                             buydate             TEXT    NOT NULL,
                             exchange_rate       FLOAT   NOT NULL,
                             price               INT     NOT NULL,
-                            current             TEXT    NOT NULL,
                             total_price         FLOAT   NOT NULL,
-                            document            TEXT    NOT NULL,
                             purchase_doc_valid  TEXT    NOT NULL,
                             origin_doc_valid    TEXT    NOT NULL,
                             vendor_id           INT     NOT NULL,
@@ -579,6 +601,7 @@ class Warehousing_window():
                             FOREIGN KEY (material_id) REFERENCES material_info (material_id) ON UPDATE CASCADE
                             )
                          ''')
+
             conn.commit()
             conn.close()
 
@@ -588,39 +611,30 @@ class Warehousing_window():
             conn.execute("PRAGMA foreign_keys = 1")
             cur = conn.cursor()
             # vendor_id 추출
-            cur.execute('select * from vendor where vendor_name=:con1 and current=:con2 and document=:con3',
-                        {"con1":str(vendorName_cmb.get()), "con2":str(current_txt.cget('text')), "con3":str(document_txt.cget('text'))})
+            cur.execute('select vendor_id from vendor where vendor_name=:con1 and current=:con2 and document=:con3'
+                        , {"con1":str(vendorName_cmb.get()), "con2":str(current_txt.cget('text')), "con3":str(document_txt.cget('text'))})
             searched_rs = cur.fetchall()
-            print('여기')
-            print(searched_rs)
             searched_vendor_id = (searched_rs[0][0])
-            searched_vendor_name = (searched_rs[0][1])
-            searched_vendor_current = (searched_rs[0][2])
-            searched_vendor_document = (searched_rs[0][3])
             # material_id 추출
-            cur.execute('select * from material_info where material_name=:con1 and namecode_eng=:con2 and namecode_kor=:con3 and material_kind=:con4 and hscode=:con5'
+            cur.execute('select material_id from material_info where material_name=:con1 and namecode_eng=:con2 and namecode_kor=:con3 and material_kind=:con4 and hscode=:con5'
                         ,{"con1":str(material_cmb.get()), "con2":str(namecode_eng_txt.cget('text')), "con3":str(namecode_kor_txt.cget('text')), "con4":str(kind_txt.cget('text')), "con5":str(hscode_txt.cget('text'))} )
             searched_rs = cur.fetchall()
-            print('여기2')
-            print(searched_rs)
             searched_material_id = (searched_rs[0][0])
-            searched_material_name = (searched_rs[0][1])
-            searched_material_namecode_eng = (searched_rs[0][2])
-            searched_material_namecode_kor = (searched_rs[0][3])
-            searched_material_kind = (searched_rs[0][4])
-            searched_material_hscode = (searched_rs[0][5])
 
             # 중복여부 체크
             cur.execute('select * from warehoused_list')
             rs = cur.fetchall()
-            data = (str(searched_material_name), str(searched_material_namecode_eng), str(searched_material_namecode_kor), str(searched_material_kind), str(searched_material_hscode),
-            float(requriedAmount_e.get()), str(unit_e.get()), str(str(ekw_e.get())+'%'), str(manufacturer_e.get()), str(origin_e.get()),
-            str(searched_vendor_name), str(buydate_e.get()), float(exchangeRate_e.get()), int(price_e.get()), str(searched_vendor_current), float(totalPrice_txt.cget('text')), str(searched_vendor_document)
+            data = (float(requriedAmount_e.get()), str(unit_e.get()), float(ekw_e.get()), str(manufacturer_e.get()), str(origin_e.get()),
+            str(buydate_e.get()), float(exchangeRate_e.get()), int(price_e.get()), float(totalPrice_txt.cget('text'))
             )
+            print('data')
+            print(data)
             overlap_check = []
             if rs != []:  # DB에 데이터가 있다면
                 for row in rs:
-                    if row[2:19] == tuple(data):
+                    print('row')
+                    print(row)
+                    if row[2:11] == tuple(data):
                         overlap_check.append('ok')
                         break
             # (데이터O / 중복O)
@@ -633,7 +647,7 @@ class Warehousing_window():
                 for i in [docMaterial_txt.cget('text'), docOrigin_txt.cget('text'), int(searched_vendor_id), int(searched_material_id)] :
                     data.append(i)
                 data = tuple(data)
-                insert_sql = 'INSERT INTO warehoused_list values(NULL,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+                insert_sql = 'INSERT INTO warehoused_list values(NULL,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
                 cur.execute(insert_sql, data)
                 msgbox.showinfo('등록완료!', '원자재 정보를 등록하였습니다.')
                 conn.commit()
@@ -641,7 +655,7 @@ class Warehousing_window():
 
                 self.tree_data_view()
                 self.initialDB()
-                self.refresh_searchCmb()
+                # self.refresh_searchCmb()
 
     def cancel(self):
         self.initialDB()
@@ -663,7 +677,7 @@ class Warehousing_window():
             else:
                 response = msgbox.askyesno('예/아니오', '해당 데이터를 삭제합니까?')
                 if response == 1:
-                    cur.execute('delete from warehoused_list where material_sn = ?', (material_txt.cget('text'),))
+                    cur.execute('delete from warehoused_list where warehoused_sn = ?', (sn_txt.cget('text'),))
                     conn.commit()
                     conn.close()
                     msgbox.showinfo('삭제완료!', '삭제를 완료했습니다.')
@@ -727,7 +741,7 @@ class Warehousing_window():
                                          requried_amount=?, unit=?, ekw=?, manufacturer=?, country_origin=?, vendor_name=?,
                                          buydate=?, exchange_rate=?, price=?, current=?, total_price=?, document=?,
                                          purchase_doc_valid=?, origin_doc_valid=?, vendor_id=?, material_id=?
-                                where material_sn = ?
+                                where warehoused_sn = ?
                     '''
                     query_data = (
                     str(material_cmb.get()), str(namecode_eng_txt.cget('text')), str(namecode_kor_txt.cget('text')),
@@ -738,7 +752,7 @@ class Warehousing_window():
                     )
                     query_data = list(query_data)
                     for i in [docMaterial_txt.cget('text'), docOrigin_txt.cget('text'), int(searched_vendor_id),
-                              int(searched_material_id),  material_txt.cget('text')]:
+                              int(searched_material_id),  sn_txt.cget('text')]:
                         query_data.append(i)
                     query_data = tuple(query_data)
                     print(query_data)
@@ -815,7 +829,7 @@ class Warehousing_window():
 
         if c ==11 :
             search_sql = '''select * from warehoused_list where
-                material_sn like ? and material_name like ? and namecode_eng like ? and namecode_kor like ? and
+                warehoused_sn like ? and material_name like ? and namecode_eng like ? and namecode_kor like ? and
                 material_kind like ? and hscode like ? and vendor_name like ? and buydate like ? and
                 document like ? and purchase_doc_valid like ? and origin_doc_valid like ?
                 '''
@@ -991,7 +1005,7 @@ class Warehousing_window():
         result = []
         for one in rs:
             one = list(one)
-            del one[8]  # EA (단위)삭제
+            del one[4]  # EA (단위)삭제
             result.append(one)
         for row in result:
             tree.insert('', END, values=row[1:])
