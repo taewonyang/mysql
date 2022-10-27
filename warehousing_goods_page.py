@@ -21,43 +21,6 @@ class Warehousing_window():
         folderName = []
         destination = []
 
-        # 트리뷰선택 -> 입력창 데이터 자동입력
-        def selectedText(event):
-            selectedItem = tree.focus()
-            getValue = tree.item(selectedItem).get('values')
-            self.cancel()
-            if selectedItem != "":
-                sn_txt.configure(text=getValue[0])
-                material_cmb.set(getValue[1])
-                namecode_eng_txt.configure(text=getValue[2])
-                namecode_kor_txt.configure(text=getValue[3])
-                kind_txt.configure(text=getValue[4])
-                hscode_txt.configure(text=getValue[5])
-                requriedAmount_e.insert(0, getValue[6])
-                ekw_e.insert(0, getValue[7].replace('%', ''))
-                manufacturer_e.delete(0, END)
-                manufacturer_e.insert(0, getValue[8])
-                origin_e.delete(0, END)
-                origin_e.insert(0, getValue[9])
-
-                vendorName_cmb.set(getValue[10])
-                buydate_e.insert(0, getValue[11])
-                exchangeRate_e.insert(0, getValue[12])
-                price_e.insert(0, getValue[13])
-                current_txt.configure(text=getValue[14])
-                totalPrice_txt.configure(text=getValue[15])
-                document_txt.configure(text=getValue[16])
-                if getValue[17] == '있음' :
-                    docMaterial_txt.configure(text='있음', background='#6B66FF', fg='#FFFFFF')
-                else:
-                    docMaterial_txt.configure(text='없음', background='#000000', fg='#FFFFFF')
-                if getValue[18] == '있음' :
-                    docOrigin_txt.configure(text='있음', background='#6B66FF', fg='#FFFFFF')
-                else :
-                    docOrigin_txt.configure(text='없음', background='#000000', fg='#FFFFFF')
-
-        tree.bind("<<TreeviewSelect>>", selectedText)
-
         # 증빙서류 폴더 열기
         def docMaterial_open_folder(self):
             if docMaterial_txt.cget('text') =='없음' :
@@ -195,17 +158,24 @@ class Warehousing_window():
         addfile_btn2.grid(row=0, column=1, padx=1, pady=3)
 
         # 버튼
-        btn_Frame = LabelFrame(self.window, text='입고내역 데이터')
-        btn_Frame.place(x=1140, y=180)
+        btn_Frame = LabelFrame(self.window, text=' 입고내역 데이터 ')
+        btn_Frame.place(x=1120, y=170)
 
-        db_insert_btn = Button(btn_Frame, text='  Save  ', command=self.regist)
+        new_frame = LabelFrame(btn_Frame, text='신규등록')
+        new_frame.grid(row=0, column=0, padx=10, pady=3)
+        db_insert_btn = Button(new_frame, text='  Save  ', command=self.regist)
         db_insert_btn.grid(row=0, column=0, padx=1, pady=3)
-        cancel_btn = Button(btn_Frame, text='  Cancel  ', command=self.cancel)
+
+        existing_Frame = LabelFrame(btn_Frame, text='기존데이터')
+        existing_Frame.grid(row=0, column=1, padx=10, pady=3)
+        btn_dataload_btn = Button(existing_Frame, text=' Load ', command=self.dataload)
+        btn_dataload_btn.grid(row=0, column=0, padx=1, pady=3)
+        cancel_btn = Button(existing_Frame, text='Cancel', command=self.cancel)
         cancel_btn.grid(row=0, column=1, padx=1, pady=3)
-        db_delete_btn = Button(btn_Frame, text='  Del  ', fg='#FF0000', command=self.remove)
+        db_delete_btn = Button(existing_Frame, text='  Del  ', fg='#FF0000', command=self.remove)
         db_delete_btn.grid(row=0, column=2, padx=9, pady=3)
-        db_edit_btn = Button(btn_Frame, text=' Update ', command=self.edit)
-        db_edit_btn.grid(row=0, column=3, padx=3, pady=3)
+        db_edit_btn = Button(existing_Frame, text=' Update ', command=self.edit)
+        db_edit_btn.grid(row=0, column=3, padx=1, pady=3)
 
         # 조회cmb
         global search_cmb1, search_cmb2, search_cmb3, search_cmb4, search_cmb5, search_cmb6, search_cmb10, search_cmb11, search_cmb13, search_cmb14, search_cmb15
@@ -364,7 +334,7 @@ class Warehousing_window():
     def create_tree_widget(self):
         global tree
         tree_frame = Frame(self.window)
-        tree_frame.place(x=10, y=260, width=1445, height=460)
+        tree_frame.place(x=10, y=260, width=1455, height=460)
 
         columns = ('sn_col','name_col', 'namecode_eng_col', 'namecode_kor_col', 'material_kind_col','hscode_col',
         'amount_col', 'ekw_col', 'manufacturer_col', 'country_origin_col', 'vendor_name_col', 'buydate_col',
@@ -405,13 +375,13 @@ class Warehousing_window():
         tree.column('country_origin_col', width=50, anchor=CENTER)
         tree.column('vendor_name_col', width=120)
         tree.column('buydate_col', width=70, anchor=CENTER)
-        tree.column('exchange_col', width=50, anchor=CENTER)
+        tree.column('exchange_col', width=45, anchor=CENTER)
         tree.column('price_col', width=60, anchor=CENTER)
         tree.column('current_col', width=40, anchor=CENTER)
         tree.column('total_price_col', width=90, anchor=CENTER)
         tree.column('document_col', width=100, anchor=CENTER)
         tree.column('purchase_doc_valid_col', width=110, anchor=CENTER)
-        tree.column('origin_doc_valid_col', width=110, anchor=CENTER)
+        tree.column('origin_doc_valid_col', width=120, anchor=CENTER)
         tree.column('btn_col', width=50, anchor=CENTER)
 
         tree.place(relheight=1, relwidth=1)
@@ -439,13 +409,11 @@ class Warehousing_window():
             result =[]
             for one in rs:
                 one = list(one)
-                del one[4] # 단위 EA 제거
-                print(one)
-
+                del one[3] # 단위 EA 제거
                 # vendor 테이블의 데이터 추출
                 cur.execute('select * from vendor where vendor_id=?', (one[12],))
                 searched_rs = cur.fetchall()
-                print(searched_rs)
+                # print(searched_rs)
                 searched_vendor_name = searched_rs[0][1]
                 searched_current = searched_rs[0][2]
                 searched_document = searched_rs[0][3]
@@ -465,10 +433,9 @@ class Warehousing_window():
                 one.insert(5, searched_material_kind)
                 one.insert(6, searched_hscode)
                 one.insert(11, searched_vendor_name)
-                one.insert(13, searched_current)
+                one.insert(15, searched_current)
                 one.insert(17, searched_document)
                 del one[20:22]
-
                 result.append(one)
             for row in result:
                 tree.insert('', END, values=row[1:])
@@ -556,7 +523,7 @@ class Warehousing_window():
 
     def regist(self):
         if material_cmb.get() == "":
-            msgbox.showerror("입력오류!", "원자재 규격을 선택해주세요")
+            msgbox.showerror("입력오류!", "원자재 규격을 입력해주세요")
         elif requriedAmount_e.get() == "":
             msgbox.showerror("입력오류!", "소요량을 입력해주세요")
         elif unit_e.get() == "":
@@ -627,8 +594,6 @@ class Warehousing_window():
             data = (float(requriedAmount_e.get()), str(unit_e.get()), float(ekw_e.get()), str(manufacturer_e.get()), str(origin_e.get()),
             str(buydate_e.get()), float(exchangeRate_e.get()), int(price_e.get()), float(totalPrice_txt.cget('text'))
             )
-            print('data')
-            print(data)
             overlap_check = []
             if rs != []:  # DB에 데이터가 있다면
                 for row in rs:
@@ -668,16 +633,17 @@ class Warehousing_window():
                         select name from sqlite_master where type='table' and name='warehoused_list'
                         ''').fetchall()
         if list_table == []:
-            msgbox.showerror('선택 오류', '삭제할 데이터를 선택해주세요.')
+            msgbox.showerror('선택 오류', '삭제할 데이터를 표에서 선택해주세요.')
         else:
             selectedItem = tree.focus()
             getValue = tree.item(selectedItem).get('values')
             if selectedItem == "":
-                msgbox.showerror('선택 오류', '삭제할 데이터를 선택해주세요.')
+                msgbox.showerror('선택 오류', '삭제할 데이터를 표에서 선택해주세요.')
             else:
                 response = msgbox.askyesno('예/아니오', '해당 데이터를 삭제합니까?')
                 if response == 1:
-                    cur.execute('delete from warehoused_list where warehoused_sn = ?', (sn_txt.cget('text'),))
+                    print()
+                    cur.execute('delete from warehoused_list where warehoused_sn = ?', (getValue[0],))
                     conn.commit()
                     conn.close()
                     msgbox.showinfo('삭제완료!', '삭제를 완료했습니다.')
@@ -687,14 +653,51 @@ class Warehousing_window():
                 elif response == 0:
                     return
 
+    def dataload(self):
+        selectedItem = tree.focus()
+        getValue = tree.item(selectedItem).get('values')
+        if selectedItem == "":
+            msgbox.showerror('선택 오류', '불러올 데이터를 표에서 선택해주세요.')
+        else:
+            print(getValue)
+            self.cancel()
+            sn_txt.configure(text=getValue[0])
+            material_cmb.set(getValue[1])
+            namecode_eng_txt.configure(text=getValue[2])
+            namecode_kor_txt.configure(text=getValue[3])
+            kind_txt.configure(text=getValue[4])
+            hscode_txt.configure(text=getValue[5])
+            requriedAmount_e.insert(0, getValue[6])
+            ekw_e.insert(0, getValue[7])
+            manufacturer_e.delete(0, END)
+            manufacturer_e.insert(0, getValue[8])
+            origin_e.delete(0, END)
+            origin_e.insert(0, getValue[9])
+
+            vendorName_cmb.set(getValue[10])
+            buydate_e.insert(0, getValue[11])
+            exchangeRate_e.insert(0, getValue[12])
+            price_e.insert(0, getValue[13])
+            current_txt.configure(text=getValue[14])
+            totalPrice_txt.configure(text=getValue[15])
+            document_txt.configure(text=getValue[16])
+            if getValue[17] == '있음':
+                docMaterial_txt.configure(text='있음', background='#6B66FF', fg='#FFFFFF')
+            else:
+                docMaterial_txt.configure(text='없음', background='#000000', fg='#FFFFFF')
+            if getValue[18] == '있음':
+                docOrigin_txt.configure(text='있음', background='#6B66FF', fg='#FFFFFF')
+            else:
+                docOrigin_txt.configure(text='없음', background='#000000', fg='#FFFFFF')
+
     def edit(self):
         selectedItem = tree.focus()
         getValue = tree.item(selectedItem).get('values')
         if selectedItem == "" :
-            msgbox.showerror('선택 오류', '수정할 데이터를 선택해주세요.')
+            msgbox.showerror('선택 오류', '수정할 데이터를 표에서 선택해주세요.')
         else :
             if material_cmb.get() == "":
-                msgbox.showerror("입력오류!", "원자재 규격을 선택해주세요")
+                msgbox.showerror("입력오류!", "원자재 규격을 입력해주세요")
             elif requriedAmount_e.get() == "":
                 msgbox.showerror("입력오류!", "소요량을 입력해주세요")
             elif unit_e.get() == "":
@@ -719,40 +722,32 @@ class Warehousing_window():
                     conn = sqlite3.connect('./BOM.db')
                     conn.execute("PRAGMA foreign_keys = 1")
                     cur = conn.cursor()
-
                     # vendor_id 추출
                     cur.execute(
                         'select vendor_id from vendor where vendor_name=:con1 and current=:con2 and document=:con3'
-                        , {"con1": str(vendorName_cmb.get()), "con2": str(current_txt.cget('text')),
-                           "con3": str(document_txt.cget('text'))})
+                        , {"con1": str(getValue[10]), "con2": str(getValue[14]), "con3": str(getValue[16])})
                     searched_rs = cur.fetchall()
                     searched_vendor_id = (searched_rs[0][0])
                     # material_id 추출
                     cur.execute(
                         'select material_id from material_info where material_name=:con1 and namecode_kor=:con2 and namecode_eng=:con3 and material_kind=:con4 and hscode=:con5'
-                        , {"con1": str(material_cmb.get()), "con2": str(namecode_eng_txt.cget('text')),
-                           "con3": str(namecode_kor_txt.cget('text')), "con4": str(kind_txt.cget('text')),
-                           "con5": str(hscode_txt.cget('text'))})
+                        , {"con1": str(getValue[1]), "con2": str(getValue[3]), "con3": str(getValue[2]), "con4": str(getValue[4]),
+                           "con5": str(getValue[5])})
                     searched_rs = cur.fetchall()
                     searched_material_id = (searched_rs[0][0])
 
                     update_query = '''
-                    update warehoused_list set material_name=?, namecode_eng=?, namecode_kor=?, material_kind=?, hscode=?,
-                                         requried_amount=?, unit=?, ekw=?, manufacturer=?, country_origin=?, vendor_name=?,
-                                         buydate=?, exchange_rate=?, price=?, current=?, total_price=?, document=?,
-                                         purchase_doc_valid=?, origin_doc_valid=?, vendor_id=?, material_id=?
+                    update warehoused_list set requried_amount=?, unit=?, ekw=?, manufacturer=?, country_origin=?, buydate=?, exchange_rate=?,
+                                            price=?, total_price=?, purchase_doc_valid=?, origin_doc_valid=?, vendor_id=?, material_id=?
                                 where warehoused_sn = ?
                     '''
                     query_data = (
-                    str(material_cmb.get()), str(namecode_eng_txt.cget('text')), str(namecode_kor_txt.cget('text')),
-                    str(kind_txt.cget('text')), str(hscode_txt.cget('text')), int(requriedAmount_e.get()), str(unit_e.get()),
-                    str(str(ekw_e.get()) + '%'), str(manufacturer_e.get()), str(origin_e.get()), str(vendorName_cmb.get()),
-                    str(buydate_e.get()), float(exchangeRate_e.get()), int(price_e.get()), str(current_txt.cget('text')),
-                    float(totalPrice_txt.cget('text')), str(document_txt.cget('text'))
+                    int(requriedAmount_e.get()), str(unit_e.get()), str(ekw_e.get()), str(manufacturer_e.get()), str(origin_e.get()),
+                    str(buydate_e.get()), float(exchangeRate_e.get()), int(price_e.get()), float(totalPrice_txt.cget('text')),
                     )
                     query_data = list(query_data)
                     for i in [docMaterial_txt.cget('text'), docOrigin_txt.cget('text'), int(searched_vendor_id),
-                              int(searched_material_id),  sn_txt.cget('text')]:
+                              int(searched_material_id), getValue[0]]:
                         query_data.append(i)
                     query_data = tuple(query_data)
                     print(query_data)
