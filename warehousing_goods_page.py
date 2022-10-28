@@ -2,6 +2,7 @@ from tkinter import *
 import tkinter.ttk as ttk
 import tkinter.messagebox as msgbox
 from tkinter import filedialog
+from datetime import datetime
 import os
 import shutil
 import sqlite3
@@ -15,7 +16,7 @@ class Warehousing_window():
         self.create_tree_widget()
         self.initialDB()
         self.tree_data_view()
-        # self.refresh_searchCmb()
+        self.refresh_searchCmb()
 
         global folderName, destination
         folderName = []
@@ -44,6 +45,11 @@ class Warehousing_window():
 
         docMaterial_txt.bind("<Double-Button-1>", docMaterial_open_folder)
         docOrigin_txt.bind("<Double-Button-1>", docOrigin_open_folder)
+
+    def resultData_export(self):
+        global resultData
+        resultData = []
+
 
     def layout(self):
         global sn_txt
@@ -113,7 +119,7 @@ class Warehousing_window():
 
         vendorname_lb = Label(Purchase_fr, text='구매처')
         vendorname_lb.grid(row=0, column=0, padx=5, pady=3)
-        buydate_lb = Label(Purchase_fr, text='구매일자')
+        buydate_lb = Label(Purchase_fr, text='구매일자\n(ex) 2022-10-28)')
         buydate_lb.grid(row=0, column=1, padx=5, pady=3)
         exchangeRate_lb = Label(Purchase_fr, text='(구매일) 환율')
         exchangeRate_lb.grid(row=0, column=2, padx=5, pady=3)
@@ -159,7 +165,7 @@ class Warehousing_window():
 
         # 버튼
         btn_Frame = LabelFrame(self.window, text=' 입고내역 데이터 ')
-        btn_Frame.place(x=1120, y=170)
+        btn_Frame.place(x=1120, y=185)
 
         new_frame = LabelFrame(btn_Frame, text='신규등록')
         new_frame.grid(row=0, column=0, padx=10, pady=3)
@@ -267,8 +273,8 @@ class Warehousing_window():
         def toatl_cal(event):
             try:
                 if exchangeRate_e.get() != "" and price_e.get() != "":
-                    total_p = float(exchangeRate_e.get()) * float(price_e.get())
-                    totalPrice_txt.configure(text=total_p)
+                    total_p = round(float(exchangeRate_e.get()),2) * round(float(price_e.get()),2)
+                    totalPrice_txt.configure(text=round(total_p,2))
                 else:
                     totalPrice_txt.configure(text="")
             except:
@@ -334,7 +340,7 @@ class Warehousing_window():
     def create_tree_widget(self):
         global tree
         tree_frame = Frame(self.window)
-        tree_frame.place(x=10, y=260, width=1455, height=460)
+        tree_frame.place(x=10, y=280, width=1465, height=430)
 
         columns = ('sn_col','name_col', 'namecode_eng_col', 'namecode_kor_col', 'material_kind_col','hscode_col',
         'amount_col', 'ekw_col', 'manufacturer_col', 'country_origin_col', 'vendor_name_col', 'buydate_col',
@@ -374,7 +380,7 @@ class Warehousing_window():
         tree.column('manufacturer_col', width=50, anchor=CENTER)
         tree.column('country_origin_col', width=50, anchor=CENTER)
         tree.column('vendor_name_col', width=120)
-        tree.column('buydate_col', width=70, anchor=CENTER)
+        tree.column('buydate_col', width=80, anchor=CENTER)
         tree.column('exchange_col', width=45, anchor=CENTER)
         tree.column('price_col', width=60, anchor=CENTER)
         tree.column('current_col', width=40, anchor=CENTER)
@@ -452,6 +458,7 @@ class Warehousing_window():
         else:
             cur.execute('select * from warehoused_list')
             rs = cur.fetchall()
+            print(rs)
             searchCmb1_opt =[]
             searchCmb2_opt =[]
             searchCmb3_opt =[]
@@ -524,7 +531,7 @@ class Warehousing_window():
     def regist(self):
         if material_cmb.get() == "":
             msgbox.showerror("입력오류!", "원자재 규격을 입력해주세요")
-        elif requriedAmount_e.get() == "":
+        elif requriedAmount_e.get() == "" :
             msgbox.showerror("입력오류!", "소요량을 입력해주세요")
         elif unit_e.get() == "":
             msgbox.showerror("입력오류!", "단위를 입력해주세요")
@@ -553,12 +560,12 @@ class Warehousing_window():
                             warehoused_sn       TEXT    NOT NULL,
                             requried_amount     FLOAT   NOT NULL,
                             unit                TEXT    NOT NULL,
-                            ekw                 INT     NOT NULL,
+                            ekw                 FLOAT   NOT NULL,
                             manufacturer        TEXT    NOT NULL,
                             country_origin      TEXT    NOT NULL,
                             buydate             TEXT    NOT NULL,
                             exchange_rate       FLOAT   NOT NULL,
-                            price               INT     NOT NULL,
+                            price               FLOAT   NOT NULL,
                             total_price         FLOAT   NOT NULL,
                             purchase_doc_valid  TEXT    NOT NULL,
                             origin_doc_valid    TEXT    NOT NULL,
@@ -591,8 +598,8 @@ class Warehousing_window():
             # 중복여부 체크
             cur.execute('select * from warehoused_list')
             rs = cur.fetchall()
-            data = (float(requriedAmount_e.get()), str(unit_e.get()), float(ekw_e.get()), str(manufacturer_e.get()), str(origin_e.get()),
-            str(buydate_e.get()), float(exchangeRate_e.get()), int(price_e.get()), float(totalPrice_txt.cget('text'))
+            data = (round(float(requriedAmount_e.get()),1), str(unit_e.get()), round(float(ekw_e.get()),1), str(manufacturer_e.get()), str(origin_e.get()),
+            datetime.strptime(buydate_e.get(), '%Y-%m-%d').date(), round(float(exchangeRate_e.get()),2), round(float(price_e.get()),2), round(float(totalPrice_txt.cget('text')),2)
             )
             overlap_check = []
             if rs != []:  # DB에 데이터가 있다면
@@ -620,7 +627,7 @@ class Warehousing_window():
 
                 self.tree_data_view()
                 self.initialDB()
-                # self.refresh_searchCmb()
+                self.refresh_searchCmb()
 
     def cancel(self):
         self.initialDB()
@@ -697,25 +704,25 @@ class Warehousing_window():
             msgbox.showerror('선택 오류', '수정할 데이터를 표에서 선택해주세요.')
         else :
             if material_cmb.get() == "":
-                msgbox.showerror("입력오류!", "원자재 규격을 입력해주세요")
+                msgbox.showerror("입력오류!", "수정되는 내용의 원자재 규격을 입력해주세요")
             elif requriedAmount_e.get() == "":
-                msgbox.showerror("입력오류!", "소요량을 입력해주세요")
+                msgbox.showerror("입력오류!", "수정되는 내용의 소요량을 입력해주세요")
             elif unit_e.get() == "":
-                msgbox.showerror("입력오류!", "단위를 입력해주세요")
+                msgbox.showerror("입력오류!", "수정되는 내용의 단위를 입력해주세요")
             elif ekw_e.get() == "":
-                msgbox.showerror("입력오류!", "구성비를 입력해주세요")
+                msgbox.showerror("입력오류!", "수정되는 내용의 구성비를 입력해주세요")
             elif manufacturer_e.get() == "":
-                msgbox.showerror("입력오류!", "제조사를 입력해주세요")
+                msgbox.showerror("입력오류!", "수정되는 내용의 제조사를 입력해주세요")
             elif origin_e.get() == "":
-                msgbox.showerror("입력오류!", "원산지를 입력해주세요")
+                msgbox.showerror("입력오류!", "수정되는 내용의 원산지를 입력해주세요")
             elif vendorName_cmb.get() == "":
-                msgbox.showerror("입력오류!", "구매처를 선택해주세요")
+                msgbox.showerror("입력오류!", "수정되는 내용의 구매처를 선택해주세요")
             elif buydate_e.get() == "":
-                msgbox.showerror("입력오류!", "구매날짜를 입력해주세요")
+                msgbox.showerror("입력오류!", "수정되는 내용의 구매날짜를 입력해주세요")
             elif exchangeRate_e.get() == "":
-                msgbox.showerror("입력오류!", "환율을 입력해주세요")
+                msgbox.showerror("입력오류!", "수정되는 내용의 환율을 입력해주세요")
             elif price_e.get() == "":
-                msgbox.showerror("입력오류!", "단가를 입력해주세요")
+                msgbox.showerror("입력오류!", "수정되는 내용의 단가를 입력해주세요")
             else:
                 response = msgbox.askyesno('예/아니오', '입력된 내용으로 수정하시겠습니까?')
                 if response == 1:
@@ -742,8 +749,8 @@ class Warehousing_window():
                                 where warehoused_sn = ?
                     '''
                     query_data = (
-                    int(requriedAmount_e.get()), str(unit_e.get()), str(ekw_e.get()), str(manufacturer_e.get()), str(origin_e.get()),
-                    str(buydate_e.get()), float(exchangeRate_e.get()), int(price_e.get()), float(totalPrice_txt.cget('text')),
+                    round(float(requriedAmount_e.get()),1), str(unit_e.get()), round(float(ekw_e.get()),1), str(manufacturer_e.get()), str(origin_e.get()),
+                    datetime.strptime(buydate_e.get(), '%Y-%m-%d').date(), round(float(exchangeRate_e.get()),2), round(float(price_e.get()),2), round(float(totalPrice_txt.cget('text')),2)
                     )
                     query_data = list(query_data)
                     for i in [docMaterial_txt.cget('text'), docOrigin_txt.cget('text'), int(searched_vendor_id),
