@@ -16,7 +16,6 @@ class Warehousing_window():
         self.create_tree_widget()
         self.initialDB()
         self.tree_data_view()
-        self.refresh_searchCmb()
 
         global folderName, destination
         folderName = []
@@ -49,6 +48,19 @@ class Warehousing_window():
     def resultData_export(self):
         global resultData
         resultData = []
+        resultData.clear()
+
+        conn = sqlite3.connect('./BOM.db')
+        conn.execute("PRAGMA foreign_keys = 1")
+        cur = conn.cursor()
+        list_table = cur.execute('''
+                    select name from sqlite_master where type='table' and name='warehoused_list'
+                    ''').fetchall()
+        if list_table == []:
+            print('warehoused_list 테이블이 없습니다.')
+        else:
+            cur.execute('select * from warehoused_list')
+            rs = cur.fetchall()
 
 
     def layout(self):
@@ -184,7 +196,7 @@ class Warehousing_window():
         db_edit_btn.grid(row=0, column=3, padx=1, pady=3)
 
         # 조회cmb
-        global search_cmb1, search_cmb2, search_cmb3, search_cmb4, search_cmb5, search_cmb6, search_cmb10, search_cmb11, search_cmb13, search_cmb14, search_cmb15
+        global search_cmb1, search_cmb2, search_cmb3, search_cmb4, search_cmb5, search_cmb6, search_cmb11, search_cmb12, search_cmb17, search_cmb18, search_cmb19
 
         searchFrame = Frame(self.window, width=1480)
         searchFrame.place(x=10, y=725)
@@ -201,17 +213,17 @@ class Warehousing_window():
         search_cmb6 = ttk.Combobox(searchFrame, height=5, width=8)
         search_cmb6.grid(row=0, column=6)
         Label(searchFrame, text='       ', fg='#FFFFFF', width=29).grid(row=0, column=7)
-        search_cmb10 = ttk.Combobox(searchFrame, height=5, width=13)
-        search_cmb10.grid(row=0, column=10)
-        search_cmb11 = ttk.Combobox(searchFrame, height=5, width=9)
-        search_cmb11.grid(row=0, column=11)
+        search_cmb11 = ttk.Combobox(searchFrame, height=5, width=13)
+        search_cmb11.grid(row=0, column=10)
+        search_cmb12 = ttk.Combobox(searchFrame, height=5, width=9)
+        search_cmb12.grid(row=0, column=11)
         Label(searchFrame, text='       ', fg='#FFFFFF', width=32).grid(row=0, column=12)
-        search_cmb13 = ttk.Combobox(searchFrame, height=5, width=11)
-        search_cmb13.grid(row=0, column=13)
-        search_cmb14 = ttk.Combobox(searchFrame, height=5, width=12)
-        search_cmb14.grid(row=0, column=14)
-        search_cmb15 = ttk.Combobox(searchFrame, height=5, width=12)
-        search_cmb15.grid(row=0, column=15)
+        search_cmb17 = ttk.Combobox(searchFrame, height=5, width=11)
+        search_cmb17.grid(row=0, column=13)
+        search_cmb18 = ttk.Combobox(searchFrame, height=5, width=12)
+        search_cmb18.grid(row=0, column=14)
+        search_cmb19 = ttk.Combobox(searchFrame, height=5, width=12)
+        search_cmb19.grid(row=0, column=15)
 
         searchBtn_frame = Frame(self.window)
         searchBtn_frame.place(x=1340, y=760)
@@ -406,13 +418,14 @@ class Warehousing_window():
         if list_table == []:
             print('warehoused_list 테이블이 없습니다.')
         else:
+            global treeview_data
+            treeview_data = []
+
             # 트리뷰 새로고침
             cur.execute('select * from warehoused_list')
             rs = cur.fetchall()
-
             for i in tree.get_children():
                 tree.delete(i)
-            result =[]
             for one in rs:
                 one = list(one)
                 del one[3] # 단위 EA 제거
@@ -442,38 +455,28 @@ class Warehousing_window():
                 one.insert(15, searched_current)
                 one.insert(17, searched_document)
                 del one[20:22]
-                result.append(one)
-            for row in result:
+                treeview_data.append(one)
+
+            searchCmb1_opt = []
+            searchCmb2_opt = []
+            searchCmb3_opt = []
+            searchCmb4_opt = []
+            searchCmb5_opt = []
+            searchCmb6_opt = []
+            searchCmb11_opt = []
+            searchCmb12_opt = []
+            searchCmb17_opt = []
+            searchCmb18_opt = []
+            searchCmb19_opt = []
+
+            for row in treeview_data:
+                # treeview 새로고침
                 tree.insert('', END, values=row[1:])
 
-    def refresh_searchCmb(self):
-        conn = sqlite3.connect('./BOM.db')
-        conn.execute("PRAGMA foreign_keys = 1")
-        cur = conn.cursor()
-        list_table = cur.execute('''
-            select name from sqlite_master where type='table' and name='warehoused_list'
-            ''').fetchall()
-        if list_table == []:
-            print('warehoused_list 테이블이 없습니다.')
-        else:
-            cur.execute('select * from warehoused_list')
-            rs = cur.fetchall()
-            print(rs)
-            searchCmb1_opt =[]
-            searchCmb2_opt =[]
-            searchCmb3_opt =[]
-            searchCmb4_opt =[]
-            searchCmb5_opt =[]
-            searchCmb6_opt =[]
-            searchCmb10_opt =[]
-            searchCmb11_opt =[]
-            searchCmb13_opt =[]
-            searchCmb14_opt =[]
-            searchCmb15_opt =[]
-            for row in rs:
-                if (row[1] in searchCmb1_opt) == False:
+                # 검색cmb 새로고침
+                if (row[1] in searchCmb1_opt) == False :
                     searchCmb1_opt.append(row[1])
-                if (row[2] in searchCmb2_opt) == False:
+                if (row[2] in searchCmb2_opt) == False :
                     searchCmb2_opt.append(row[2])
                 if (row[3] in searchCmb3_opt) == False:
                     searchCmb3_opt.append(row[3])
@@ -483,39 +486,39 @@ class Warehousing_window():
                     searchCmb5_opt.append(row[5])
                 if (row[6] in searchCmb6_opt) == False:
                     searchCmb6_opt.append(row[6])
-                if (row[12] in searchCmb10_opt) == False:
-                    searchCmb10_opt.append(row[12])
-                if (row[13] in searchCmb11_opt) == False:
-                    searchCmb11_opt.append(row[13])
-                if (row[18] in searchCmb13_opt) == False:
-                    searchCmb13_opt.append(row[18])
-                if (row[19] in searchCmb14_opt) == False:
-                    searchCmb14_opt.append(row[19])
-                if (row[20] in searchCmb15_opt) == False:
-                    searchCmb15_opt.append(row[20])
+                if (row[11] in searchCmb11_opt) == False:
+                    searchCmb11_opt.append(row[11])
+                if (row[12] in searchCmb12_opt) == False:
+                    searchCmb12_opt.append(row[12])
+                if (row[17] in searchCmb17_opt) == False :
+                    searchCmb17_opt.append(row[17])
+                if (row[18] in searchCmb18_opt) == False :
+                    searchCmb18_opt.append(row[18])
+                if (row[19] in searchCmb19_opt) == False :
+                    searchCmb19_opt.append(row[19])
 
-            searchCmb1_opt.sort()
-            searchCmb2_opt.sort()
-            searchCmb3_opt.sort()
-            searchCmb4_opt.sort()
-            searchCmb5_opt.sort()
-            searchCmb6_opt.sort()
-            searchCmb10_opt.sort()
-            searchCmb11_opt.sort()
-            searchCmb13_opt.sort()
-            searchCmb14_opt.sort()
-            searchCmb15_opt.sort()
-            search_cmb1.configure(values=searchCmb1_opt)
-            search_cmb2.configure(values=searchCmb2_opt)
-            search_cmb3.configure(values=searchCmb3_opt)
-            search_cmb4.configure(values=searchCmb4_opt)
-            search_cmb5.configure(values=searchCmb5_opt)
-            search_cmb6.configure(values=searchCmb6_opt)
-            search_cmb10.configure(values=searchCmb10_opt)
-            search_cmb11.configure(values=searchCmb11_opt)
-            search_cmb13.configure(values=searchCmb13_opt)
-            search_cmb14.configure(values=searchCmb14_opt)
-            search_cmb15.configure(values=searchCmb15_opt)
+                searchCmb1_opt.sort()
+                searchCmb2_opt.sort()
+                searchCmb3_opt.sort()
+                searchCmb4_opt.sort()
+                searchCmb5_opt.sort()
+                searchCmb6_opt.sort()
+                searchCmb11_opt.sort()
+                searchCmb12_opt.sort()
+                searchCmb17_opt.sort()
+                searchCmb18_opt.sort()
+                searchCmb19_opt.sort()
+                search_cmb1.configure(values=searchCmb1_opt)
+                search_cmb2.configure(values=searchCmb2_opt)
+                search_cmb3.configure(values=searchCmb3_opt)
+                search_cmb4.configure(values=searchCmb4_opt)
+                search_cmb5.configure(values=searchCmb5_opt)
+                search_cmb6.configure(values=searchCmb6_opt)
+                search_cmb11.configure(values=searchCmb11_opt)
+                search_cmb12.configure(values=searchCmb12_opt)
+                search_cmb17.configure(values=searchCmb17_opt)
+                search_cmb18.configure(values=searchCmb18_opt)
+                search_cmb19.configure(values=searchCmb19_opt)
 
     def check_certificate(self): # 입증서류 유무 체크
         if os.path.exists(purchase_dir+'\\') == True :
@@ -627,7 +630,6 @@ class Warehousing_window():
 
                 self.tree_data_view()
                 self.initialDB()
-                self.refresh_searchCmb()
 
     def cancel(self):
         self.initialDB()
@@ -768,221 +770,86 @@ class Warehousing_window():
                     return
 
     def search(self):
+        for i in tree.get_children():
+            tree.delete(i)
+
         conn = sqlite3.connect('./BOM.db')
         conn.execute("PRAGMA foreign_keys = 1")
         cur = conn.cursor()
-        check_list = [search_cmb1.get(), search_cmb2.get(), search_cmb3.get(), search_cmb4.get(), search_cmb5.get(), search_cmb6.get(), search_cmb10.get(), search_cmb11.get(), search_cmb13.get(), search_cmb14.get(), search_cmb15.get()]
-        c = 0
-        column_index = []
+        check_list = [search_cmb1.get(), search_cmb2.get(), search_cmb3.get(), search_cmb4.get(), search_cmb5.get(), search_cmb6.get(), search_cmb11.get(), search_cmb12.get(), search_cmb17.get(), search_cmb18.get(), search_cmb19.get()]
         searchInfo = []  # (검색순번, 입력값)
-        for i in enumerate(check_list, start=1):
+        for i in enumerate(check_list):
             if i[1] != "":
-                c = c + 1
                 searchInfo.append(i)
-                column_index.append(i[0])
         # print('검색하려는값 (검색순번,입력값)')
         # print(searchInfo)
-        cur.execute('select * from warehoused_list')
-        column_name = [fd[0] for fd in cur.description]  # 테이블의 필드명 가져오기
-        # print(column_name)
-        for i in ['requried_amount', 'unit', 'ekw', 'exchange_rate', 'price', 'current', 'total_price', 'manufacturer', 'country_origin'] :
-            column_name.remove(i)
-        # print('필드명 요소 삭제 후')
-        # print(column_name)
-        # print('검색 컬럼 인덱스(1부터 시작)')
-        # print(column_index)
 
-        # result = []
-        # def filter(num):
-        #     sql_txt = ""
-        #     search_txt = ""
-        #     for i in range(0, num):
-        #         # sql_txt 만들기
-        #         if i != num - 1:
-        #             txt = sql_txt + '{column_name[column_index[' + str(i) + ']]} like ? and '
-        #             sql_txt = ""
-        #             sql_txt = sql_txt + txt
-        #         elif i == num - 1:
-        #             txt = sql_txt + '{column_name[column_index[' + str(i) + ']]} like ?'
-        #             sql_txt = ""
-        #             sql_txt = sql_txt + txt
-        #
-        #         # search_txt 만들기
-        #         if i != num - 1:
-        #             re_txt = search_txt + "'%'+" + 'searchInfo[' + str(i) + '][1]' + "+'%', "
-        #             search_txt = ""
-        #             search_txt = search_txt + re_txt
-        #         elif i == num - 1:
-        #             re_txt = search_txt + "'%'+" + 'searchInfo[' + str(i) + '][1]' + "+'%'"
-        #             search_txt = ""
-        #             search_txt = search_txt + re_txt
-        #     result.clear()
-        #     result.append(sql_txt)
-        #     result.append(search_txt)
+        if len(searchInfo) == 0 :
+            self.tree_data_view()
+            # print('검색요청값 없음')
+        else :
+            cur.execute('''SELECT warehoused_list.warehoused_sn, material_info.material_name, material_info.namecode_eng, material_info.namecode_kor,
+                                material_info.material_kind, material_info.hscode, vendor.vendor_name, warehoused_list.buydate, vendor.document,
+                                warehoused_list.purchase_doc_valid, warehoused_list.origin_doc_valid     
+                            FROM warehoused_list 
+                            JOIN material_info ON warehoused_list.material_id = material_info.material_id
+                            JOIN vendor ON warehoused_list.vendor_id = vendor.vendor_id ''')
 
-        # elif c == 10:
-        #     filter(10)
-        #     search_sql = f"\'" + "select * from warehoused_list where " + result[0] + "\'"
-        #     # search_sql = "f'''select * from warehoused_list where " + result[0] +"'''"
-        #     print(search_sql.format())
-        #     print(result[1])
-        #     cur.execute(search_sql, result[1])
-        #     rs = cur.fetchall()
+            searched_data = []
 
-        if c ==11 :
-            search_sql = '''select * from warehoused_list where
-                warehoused_sn like ? and material_name like ? and namecode_eng like ? and namecode_kor like ? and
-                material_kind like ? and hscode like ? and vendor_name like ? and buydate like ? and
-                document like ? and purchase_doc_valid like ? and origin_doc_valid like ?
-                '''
-            cur.execute(search_sql,('%'+search_cmb1.get()+'%' , '%'+search_cmb2.get()+'%', '%'+search_cmb3.get()+'%', '%'+search_cmb4.get()+'%', '%'+search_cmb5.get()+'%', '%'+str(search_cmb6.get())+'%', '%'+search_cmb10.get()+'%', '%'+search_cmb11.get()+'%', '%'+search_cmb13.get()+'%', '%'+search_cmb14.get()+'%', '%'+search_cmb15.get()+'%'))
-            rs = cur.fetchall()
-        elif c==10 :
-            search_sql = f'''select * from warehoused_list where
-                {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
-                {column_name[column_index[3]]} like ? and {column_name[column_index[4]]} like ? and {column_name[column_index[5]]} like ? and
-                {column_name[column_index[6]]} like ? and {column_name[column_index[7]]} like ? and {column_name[column_index[8]]} like ? and
-                {column_name[column_index[9]]} like ?'''
-            search_txt1 = searchInfo[0][1]
-            search_txt2 = searchInfo[1][1]
-            search_txt3 = searchInfo[2][1]
-            search_txt4 = searchInfo[3][1]
-            search_txt5 = searchInfo[4][1]
-            search_txt6 = searchInfo[5][1]
-            search_txt7 = searchInfo[6][1]
-            search_txt8 = searchInfo[7][1]
-            search_txt9 = searchInfo[8][1]
-            search_txt10 = searchInfo[9][1]
-            cur.execute(search_sql, ('%'+search_txt1+'%' , '%'+search_txt2+'%', '%'+search_txt3+'%', '%'+search_txt4+'%', '%'+search_txt5+'%', '%'+search_txt6+'%', '%'+search_txt7+'%', '%'+search_txt8+'%', '%'+search_txt9+'%', '%'+search_txt10+'%'))
-            rs = cur.fetchall()
-        elif c==9 :
-            search_sql = f'''select * from warehoused_list where
-               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
-               {column_name[column_index[3]]} like ? and {column_name[column_index[4]]} like ? and {column_name[column_index[5]]} like ? and
-               {column_name[column_index[6]]} like ? and {column_name[column_index[7]]} like ? and {column_name[column_index[8]]} like ?'''
-            search_txt1 = searchInfo[0][1]
-            search_txt2 = searchInfo[1][1]
-            search_txt3 = searchInfo[2][1]
-            search_txt4 = searchInfo[3][1]
-            search_txt5 = searchInfo[4][1]
-            search_txt6 = searchInfo[5][1]
-            search_txt7 = searchInfo[6][1]
-            search_txt8 = searchInfo[7][1]
-            search_txt9 = searchInfo[8][1]
-            cur.execute(search_sql, (
-            '%' + search_txt1 + '%', '%' + search_txt2 + '%', '%' + search_txt3 + '%', '%' + search_txt4 + '%',
-            '%' + search_txt5 + '%', '%' + search_txt6 + '%', '%' + search_txt7 + '%', '%' + search_txt8 + '%',
-            '%' + search_txt9 + '%'))
-            rs = cur.fetchall()
-        elif c==8 :
-            search_sql = f'''select * from warehoused_list where
-               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
-               {column_name[column_index[3]]} like ? and {column_name[column_index[4]]} like ? and {column_name[column_index[5]]} like ? and
-               {column_name[column_index[6]]} like ? and {column_name[column_index[7]]} like ?'''
-            search_txt1 = searchInfo[0][1]
-            search_txt2 = searchInfo[1][1]
-            search_txt3 = searchInfo[2][1]
-            search_txt4 = searchInfo[3][1]
-            search_txt5 = searchInfo[4][1]
-            search_txt6 = searchInfo[5][1]
-            search_txt7 = searchInfo[6][1]
-            search_txt8 = searchInfo[7][1]
-            cur.execute(search_sql, (
-            '%' + search_txt1 + '%', '%' + search_txt2 + '%', '%' + search_txt3 + '%', '%' + search_txt4 + '%',
-            '%' + search_txt5 + '%', '%' + search_txt6 + '%', '%' + search_txt7 + '%', '%' + search_txt8 + '%'
-            ))
-            rs = cur.fetchall()
-        elif c==7 :
-            search_sql = f'''select * from warehoused_list where
-               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
-               {column_name[column_index[3]]} like ? and {column_name[column_index[4]]} like ? and {column_name[column_index[5]]} like ? and
-               {column_name[column_index[6]]} like ?'''
-            search_txt1 = searchInfo[0][1]
-            search_txt2 = searchInfo[1][1]
-            search_txt3 = searchInfo[2][1]
-            search_txt4 = searchInfo[3][1]
-            search_txt5 = searchInfo[4][1]
-            search_txt6 = searchInfo[5][1]
-            search_txt7 = searchInfo[6][1]
-            cur.execute(search_sql, (
-            '%' + search_txt1 + '%', '%' + search_txt2 + '%', '%' + search_txt3 + '%', '%' + search_txt4 + '%',
-            '%' + search_txt5 + '%', '%' + search_txt6 + '%', '%' + search_txt7 + '%'))
-            rs = cur.fetchall()
-        elif c==6 :
-            search_sql = f'''select * from warehoused_list where
-               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
-               {column_name[column_index[3]]} like ? and {column_name[column_index[4]]} like ? and {column_name[column_index[5]]} like ?'''
-            search_txt1 = searchInfo[0][1]
-            search_txt2 = searchInfo[1][1]
-            search_txt3 = searchInfo[2][1]
-            search_txt4 = searchInfo[3][1]
-            search_txt5 = searchInfo[4][1]
-            search_txt6 = searchInfo[5][1]
-            cur.execute(search_sql, (
-            '%' + search_txt1 + '%', '%' + search_txt2 + '%', '%' + search_txt3 + '%', '%' + search_txt4 + '%',
-            '%' + search_txt5 + '%', '%' + search_txt6 + '%'))
-            rs = cur.fetchall()
-        elif c==5 :
-            search_sql = f'''select * from warehoused_list where
-               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
-               {column_name[column_index[3]]} like ? and {column_name[column_index[4]]} like ?'''
-            search_txt1 = searchInfo[0][1]
-            search_txt2 = searchInfo[1][1]
-            search_txt3 = searchInfo[2][1]
-            search_txt4 = searchInfo[3][1]
-            search_txt5 = searchInfo[4][1]
-            cur.execute(search_sql, (
-            '%' + search_txt1 + '%', '%' + search_txt2 + '%', '%' + search_txt3 + '%', '%' + search_txt4 + '%',
-            '%' + search_txt5 + '%'))
-            rs = cur.fetchall()
-        elif c==4 :
-            search_sql = f'''select * from warehoused_list where
-               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ? and
-               {column_name[column_index[3]]} like ?'''
-            search_txt1 = searchInfo[0][1]
-            search_txt2 = searchInfo[1][1]
-            search_txt3 = searchInfo[2][1]
-            search_txt4 = searchInfo[3][1]
-            cur.execute(search_sql, (
-            '%' + search_txt1 + '%', '%' + search_txt2 + '%', '%' + search_txt3 + '%', '%' + search_txt4 + '%'))
-            rs = cur.fetchall()
-        elif c==3 :
-            search_sql = f'''select * from warehoused_list where
-               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ? and {column_name[column_index[2]]} like ?'''
-            search_txt1 = searchInfo[0][1]
-            search_txt2 = searchInfo[1][1]
-            search_txt3 = searchInfo[2][1]
-            cur.execute(search_sql, (
-            '%' + search_txt1 + '%', '%' + search_txt2 + '%', '%' + search_txt3 + '%'))
-            rs = cur.fetchall()
-        elif c==2 :
-            search_sql = f'''select * from warehoused_list where
-               {column_name[column_index[0]]} like ? and {column_name[column_index[1]]} like ?'''
-            search_txt1 = searchInfo[0][1]
-            search_txt2 = searchInfo[1][1]
-            cur.execute(search_sql, (
-            '%' + search_txt1 + '%', '%' + search_txt2 + '%'))
-            rs = cur.fetchall()
-        elif c==1 :
-            search_sql = f'select * from warehoused_list where {column_name[column_index[0]]} like ?'
-            search_txt = searchInfo[0][1]
-            cur.execute(search_sql, ('%'+search_txt+'%',))
-            rs = cur.fetchall()
-        elif c==0 :
-            cur.execute('select * from warehoused_list')
-            rs = cur.fetchall()
+            # 트리뷰 view
+            for check_row in cur.fetchall() :
+                # print('===========')
+                # print(check_row)
+                result = []
+                for i in searchInfo :
+                    if check_row[i[0]] == i[1] :
+                        result.append('일치')
+                    else :
+                        result.append('불일치')
+                # print('result')
+                # print(result)
+                if list(set(result))[0] == '일치' and len(set(result)) == 1 :
+                    # 트리뷰에 데이터 view
+                    # print(check_row[0])
+                    cur.execute('select * from warehoused_list where warehoused_sn = ?', (check_row[0],))
+                    rs = cur.fetchall()
 
-        #트리뷰 view
-        for i in tree.get_children():
-            tree.delete(i)
-        # print(rs)
-        result = []
-        for one in rs:
-            one = list(one)
-            del one[8] # EA (단위)삭제
-            result.append(one)
-        for row in result:
-            tree.insert('', END, values=row[1:])
+
+                    for one in rs:
+                        one = list(one)
+                        del one[3]  # 단위 EA 제거
+                        # vendor 테이블의 데이터 추출
+                        cur.execute('select * from vendor where vendor_id=?', (one[12],))
+                        searched_rs = cur.fetchall()
+                        # print(searched_rs)
+                        searched_vendor_name = searched_rs[0][1]
+                        searched_current = searched_rs[0][2]
+                        searched_document = searched_rs[0][3]
+
+                        # material 테이블의 데이터 추출
+                        cur.execute('select * from material_info where material_id=?', (one[13],))
+                        searched_rs = cur.fetchall()
+                        searched_material_name = searched_rs[0][1]
+                        searched_namecode_eng = searched_rs[0][2]
+                        searched_namecode_kor = searched_rs[0][3]
+                        searched_material_kind = searched_rs[0][4]
+                        searched_hscode = searched_rs[0][5]
+
+                        one.insert(2, searched_material_name)
+                        one.insert(3, searched_namecode_eng)
+                        one.insert(4, searched_namecode_kor)
+                        one.insert(5, searched_material_kind)
+                        one.insert(6, searched_hscode)
+                        one.insert(11, searched_vendor_name)
+                        one.insert(15, searched_current)
+                        one.insert(17, searched_document)
+                        del one[20:22]
+                        searched_data.append(one)
+
+            for row in searched_data:
+                # treeview 새로고침
+                tree.insert('', END, values=row[1:])
 
     def default(self):
         search_cmb1.set("")
@@ -991,26 +858,13 @@ class Warehousing_window():
         search_cmb4.set("")
         search_cmb5.set("")
         search_cmb6.set("")
-        search_cmb10.set("")
         search_cmb11.set("")
-        search_cmb13.set("")
-        search_cmb14.set("")
-        search_cmb15.set("")
+        search_cmb12.set("")
+        search_cmb17.set("")
+        search_cmb18.set("")
+        search_cmb19.set("")
 
-        conn = sqlite3.connect('./BOM.db')
-        conn.execute("PRAGMA foreign_keys = 1")
-        cur = conn.cursor()
-        cur.execute('select * from warehoused_list')
-        rs = cur.fetchall()
-        for i in tree.get_children():
-            tree.delete(i)
-        result = []
-        for one in rs:
-            one = list(one)
-            del one[4]  # EA (단위)삭제
-            result.append(one)
-        for row in result:
-            tree.insert('', END, values=row[1:])
+        self.tree_data_view()
 
     ################################ 파일첨부 화면 ######################################
     # 파일첨부 윈도우 오픈(구매증명서)
