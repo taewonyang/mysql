@@ -167,12 +167,15 @@ class Register_window():
             else :
                 response = msgbox.askyesno('예/아니오', '해당 데이터를 삭제합니까?')
                 if response == 1 :
-                    cur.execute('delete from vendor where vendor_name=:con1 and current=:con2 and document=:con3', {"con1":getValue[0], "con2":getValue[1], "con3":getValue[2]})
-                    conn.commit()
-                    conn.close()
-                    msgbox.showinfo('삭제완료!', '삭제를 완료했습니다.')
+                    try :
+                        cur.execute('delete from vendor where vendor_name=:con1 and current=:con2 and document=:con3', {"con1":getValue[0], "con2":getValue[1], "con3":getValue[2]})
+                        conn.commit()
+                        conn.close()
+                        msgbox.showinfo('삭제완료!', '삭제를 완료했습니다.')
 
-                    self.tree_data_view()
+                        self.tree_data_view()
+                    except sqlite3.IntegrityError :
+                        msgbox.showerror('삭제불가!', '참조된 데이터가 존재합니다.\n먼저 참조된 데이터를 삭제하신 후 다시 시도해주세요.')
                 elif response == 0 :
                     return
 
