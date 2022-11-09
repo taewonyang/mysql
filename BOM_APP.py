@@ -1,5 +1,5 @@
 from tkinter import *
-import vendor_register_page, warehousing_goods_page, material_info_page
+import vendor_register_page, warehousing_goods_page, material_info_page, BOM_register_page
 
 class App() :
     def __init__(self, root):
@@ -16,6 +16,8 @@ class App() :
         material_list_btn.grid(row=0, column=1, padx=5, pady=5, ipady=3, ipadx=3)
         material_info_btn = Button(menu_frame, text='원자재 정보 ' , command=self.go_material_info)
         material_info_btn.grid(row=1,column=0, padx=5, pady=5, ipady=3, ipadx=3)
+        material_info_btn = Button(menu_frame, text='BOM작성 ', command=self.go_BOM_register)
+        material_info_btn.grid(row=1, column=1, padx=5, pady=5, ipady=3, ipadx=3)
 
     def go_vendor_register(self):
         win = Toplevel()
@@ -29,6 +31,9 @@ class App() :
         win=Toplevel()
         material_info_page.Material_Info(win)
 
+    def go_BOM_register(self):
+        win=Toplevel()
+        BOM_register_page.Bom_register(win)
 
 def startApp() :
     root = Tk()

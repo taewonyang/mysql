@@ -651,7 +651,6 @@ class Warehousing_window():
             else:
                 response = msgbox.askyesno('예/아니오', '해당 데이터를 삭제합니까?')
                 if response == 1:
-                    print()
                     cur.execute('delete from warehoused_list where warehoused_sn = ?', (getValue[0],))
                     conn.commit()
                     conn.close()
