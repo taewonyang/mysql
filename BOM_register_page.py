@@ -3,25 +3,60 @@ import tkinter.ttk as ttk
 import tkinter.messagebox as msgbox
 import sqlite3
 from tkcalendar import Calendar
+from datetime import datetime
 
 class Bom_register():
     def __init__(self, window):
         self.window = window
-        self.window.geometry('1500x700')
+        self.window.geometry('1500x750')
         self.window.resizable(False, False)
         self.layout()
+        self.initialDB()
+
+        datetime.today().strftime('%Y-%m-%d')
+
+        def calView(self) : #캘린더 view
+            global cal1, DateSel_btn, calForget_btn
+            cal1 = Calendar(innerRight_frame, selectmode='day')
+            cal1.grid(row=0, column=0, padx=3, pady=5)
+
+            DateSelBtn_lbframe = Label(innerRight_frame)
+            DateSelBtn_lbframe.grid(row=0, column=1, padx=3)
+            DateSel_btn = Button(DateSelBtn_lbframe, text=' 날짜 \n 입력 ', command=input_seldate)
+            DateSel_btn.grid(row=0, column=0, padx=3, pady=10)
+            calForget_btn = Button(DateSelBtn_lbframe, text=' 달력 \n 닫기 ', command=forget_cal)
+            calForget_btn.grid(row=1,column=0, padx=3, pady=10)
+
+        def input_seldate(): # 선택 날짜 입력
+            sel_date = datetime.strptime(cal1.get_date(), '%m/%d/%y').date()
+            bomDate_e.delete(0, END)
+            bomDate_e.insert(0, sel_date)
+            cal1.grid_forget()
+            DateSel_btn.grid_forget()
+            calForget_btn.grid_forget()
+
+        def forget_cal() : #달력 숨기기
+            cal1.grid_forget()
+            DateSel_btn.grid_forget()
+            calForget_btn.grid_forget()
+
+        bomDate_e.bind("<Button-1>", calView)
 
     def layout(self):
+        global bomDate_e, innerRight_frame, bomCurrent_cmb
+
         topFrame = Frame(self.window, width=1500, height=70, bg='#FDFFFF', bd=0.5)
         topFrame.place(x=0, y=0)
-        leftFrame = Frame(self.window, width=600, height=630, relief='solid', bd=0.5)
+        leftFrame = Frame(self.window, width=605, height=680, relief='solid', bd=0.5)
         leftFrame.place(x=5, y=70)
-        rightFrame = Frame(self.window, width=885, height=630, bd=0.5)
+        rightFrame = Frame(self.window, width=885, height=675, relief='solid', bd=0.5)
         rightFrame.place(x=610, y=70)
 
         # topFrame내용
-        title = Label(topFrame, text='BOM 등록', font=("Georgia", 15), bg='#FDFFFF')
-        title.place(x=30, y=20)
+        title1_lb = Label(topFrame, text='BOM 등록', font=("Georgia", 15), bg='#FDFFFF')
+        title1_lb.place(x=30, y=20)
+        title2_lb = Label(topFrame, text='BOM 조회', font=("Georgia", 15), bg='#FDFFFF')
+        title2_lb.place(x=620, y=20)
 
         # leftFrame내용
         # -기본 정보(공통)-
@@ -29,10 +64,10 @@ class Bom_register():
         bomInfo_frame.pack(fill='both', expand=True, padx=10, pady=10)
         innerLeft_frame = Frame(bomInfo_frame)
         innerLeft_frame.grid(row=0, column=0, padx=10)
-        innerRight_frame = Frame(bomInfo_frame)
+        innerRight_frame = Frame(bomInfo_frame, height=176)
         innerRight_frame.grid(row=0, column=1, padx=10)
 
-        bomDate_lb = Label(innerLeft_frame, text='날짜 입력       \n(ex:2022-11-10)')
+        bomDate_lb = Label(innerLeft_frame, text='날짜               \n(ex:2022-11-10)')
         bomDate_lb.grid(row=0, column=0, padx=5, pady=3, sticky=W)
         bomDate_lbframe = Label(innerLeft_frame)
         bomDate_lbframe.grid(row=0, column=1, padx=5, pady=3, sticky=W)
@@ -49,14 +84,11 @@ class Bom_register():
         bomExRate_e = Entry(innerLeft_frame, width=10)
         bomExRate_e.grid(row=2, column=1, padx=5, pady=3, sticky=W)
         CheckVar1 = IntVar()
-        keep_chkbtn = Checkbutton(innerLeft_frame, text="입력내용 유지", variable=CheckVar1)
+        keep_chkbtn = Checkbutton(innerLeft_frame, text="기본 정보(공통)\n입력내용 유지", variable=CheckVar1)
         keep_chkbtn.grid(row=3, column=0, padx=7, pady=7)
-        clear_btn = Button(innerLeft_frame, text=' 기본정보 \n Clear ')
+        clear_btn = Button(innerLeft_frame, text=' 기본 정보 \nClear')
         clear_btn.grid(row=3, column=1, padx=7, pady=7)
 
-        cal1 = Calendar(innerRight_frame, selectmode='day')
-        cal1.grid(row=0, column=0, padx=3, pady=5)
-        # cal1.pack(side='left', padx=10, pady=(30, 10))
 
         # -세부정보-
         detailInfo_frame = LabelFrame(leftFrame, text='세부 내용', labelanchor=N)
@@ -96,6 +128,12 @@ class Bom_register():
         productPrice_lb.grid(row=3,column=0, padx=5, pady=3)
         productPrice_e = Entry(producInfo_frame, width =15)
         productPrice_e.grid(row=3, column=1, padx=5, pady=3, sticky=W)
+        productPic_lb = Label(producInfo_frame, text='완제품 사진')
+        productPic_lb.grid(row=4, column=0, padx=1, pady=5)
+        productPic_txt = Label(producInfo_frame, text='없음')
+        productPic_txt.grid(row=4, column=1, padx=1, pady=5, sticky=W)
+        addPic_btn = Button(producInfo_frame, text='사진 첨부')
+        addPic_btn.grid(row=4, column=1, padx=2, pady=5)
 
         #소재정보
         materialInfo_frame = LabelFrame(detailInfo_frame, text='소재 정보')
@@ -152,10 +190,37 @@ class Bom_register():
         db_edit_btn = Button(existing_Frame, text=' Update ')
         db_edit_btn.grid(row=0, column=3, padx=1, pady=3)
 
-        global tree_frame
         # rightFrame 내용
+        global tree_frame
+
+        bomDate_lb2 = Label(rightFrame, text='날짜 선택')
+        bomDate_lb2.place(x=10, y=20)
+        bomDate_cmb = ttk.Combobox(rightFrame, height=7, width=13, state='readonly')
+        bomDate_cmb.place(x=80, y=20)
+        bomDateView_btn = Button(rightFrame, text='조회')
+        bomDateView_btn.place(x=210, y=15)
         tree_frame = Frame(rightFrame, bg='blue')
-        tree_frame.place(x=10, y=10, width=870, height=610)
+        tree_frame.place(x=10, y=70, width=870, height=530)
+
+    def initialDB(self):
+        conn = sqlite3.connect('BOM.db')
+        conn.execute("PRAGMA foreign_keys = 1")
+        cur = conn.cursor()
+
+        # <기본정보-통화 데이터 뿌려주기>
+        list_table = cur.execute('''
+                       select name from sqlite_master where type='table' and name='vendor'
+                       ''').fetchall()
+        if list_table == []:
+            print('material_info 테이블이 없습니다.')
+        else:
+            current_db = cur.execute('select * from vendor').fetchall()
+            current_opt = []
+            for row in current_db :
+                if row in current_opt :
+                current_opt.append(row[2])
+            bomCurrent_cmb.configure(values=current_opt)
+
 
     def create_tree_widget(self):
         columns = ('sn_col', 'name_col', 'namecode_eng_col', 'namecode_kor_col', 'material_kind_col', 'hscode_col',
