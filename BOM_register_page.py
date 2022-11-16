@@ -4,6 +4,7 @@ import tkinter.messagebox as msgbox
 import sqlite3
 from tkcalendar import Calendar
 from datetime import datetime
+import os
 
 class Bom_register():
     def __init__(self, window):
@@ -13,8 +14,8 @@ class Bom_register():
         self.layout()
         self.initialDB()
 
+        # <달력 보기>
         datetime.today().strftime('%Y-%m-%d')
-
         def calView(self) : #캘린더 view
             global cal1, DateSel_btn, calForget_btn
             innerRight_frame.grid(row=0, column=1, padx=10)
@@ -45,9 +46,15 @@ class Bom_register():
 
         bomDate_e.bind("<Button-1>", calView)
 
-    def layout(self):
-        global bomDate_e, innerRight_frame, bomCurrent_cmb, material_cmb, materialBuyDate_cmb, shank_cmb, shankBuyDate_cmb, etc_cmb, etcBuyDate_cmb, productSerial_txt
 
+        # <완제품사진 폴더 열기>
+        ################################# ################
+
+
+
+    def layout(self):
+        global innerRight_frame, productSerial_txt, productPic_txt
+        global bomDate_e, bomCurrent_cmb, bomExRate_e, productSpec_e, productType_cmb, productPrice_e, material_cmb, materialBuyDate_cmb, shank_cmb, shankBuyDate_cmb, etc_cmb, etcBuyDate_cmb
         topFrame = Frame(self.window, width=1500, height=70, bg='#FDFFFF', bd=0.5)
         topFrame.place(x=0, y=0)
         leftFrame = Frame(self.window, width=605, height=680, relief='solid', bd=0.5)
@@ -76,7 +83,7 @@ class Bom_register():
         bomDate_lbframe.grid(row=0, column=1, padx=5, pady=3, sticky=W)
         bomDate_e = Entry(bomDate_lbframe, width=10)
         bomDate_e.grid(row=0, column=0,padx=1)
-        bomToday_btn = Button(bomDate_lbframe, text=' T ')
+        bomToday_btn = Button(bomDate_lbframe, text=' T ', command=self.input_today)
         bomToday_btn.grid(row=0, column=1, padx=1)
         bomCurrent_lb = Label(innerLeft_frame, text='통화')
         bomCurrent_lb.grid(row=1, column=0, padx=5, pady=3, sticky=W)
@@ -89,9 +96,8 @@ class Bom_register():
         CheckVar1 = IntVar()
         keep_chkbtn = Checkbutton(innerLeft_frame, text="기본 정보(공통)\n입력내용 유지", variable=CheckVar1)
         keep_chkbtn.grid(row=3, column=0, padx=7, pady=7)
-        basicInfoClear_btn = Button(innerLeft_frame, text=' 기본 정보 \nClear')
+        basicInfoClear_btn = Button(innerLeft_frame, text=' 기본 정보 \nClear', command=self.basicInfoClear)
         basicInfoClear_btn.grid(row=3, column=1, padx=7, pady=7)
-
 
         # -세부정보-
         detailInfo_frame = LabelFrame(leftFrame, text='세부 내용', labelanchor=N)
@@ -110,17 +116,17 @@ class Bom_register():
 
         specialtxt_lbframe = LabelFrame(producInfo_frame,text='')
         specialtxt_lbframe.grid(row=1, column=2, padx=8)
-        angle_btn = Button(specialtxt_lbframe, text='  ˚  ')
+        angle_btn = Button(specialtxt_lbframe, text='  ˚  ', command=self.input_angleTxt)
         angle_btn.grid(row=0, column=0, padx=0.5)
-        micron_btn = Button(specialtxt_lbframe, text=' ㎛ ')
+        micron_btn = Button(specialtxt_lbframe, text=' ㎛ ', command=self.input_micronTxt)
         micron_btn.grid(row=0, column=1, padx=0.5)
-        x_btn = Button(specialtxt_lbframe, text=' × ')
+        x_btn = Button(specialtxt_lbframe, text=' × ', command=self.input_xTxt)
         x_btn.grid(row=0, column=2, padx=0.5)
-        pie_btn = Button(specialtxt_lbframe, text=' Ø ')
+        pie_btn = Button(specialtxt_lbframe, text=' Ø ', command=self.input_pieTxt)
         pie_btn.grid(row=0, column=3, padx=0.5)
-        xcon_btn = Button(specialtxt_lbframe, text='×CON')
+        xcon_btn = Button(specialtxt_lbframe, text='×CON', command=self.input_xCONTxt)
         xcon_btn.grid(row=0, column=4, padx=0.5)
-        xcyl_btn = Button(specialtxt_lbframe, text='×CYL')
+        xcyl_btn = Button(specialtxt_lbframe, text='×CYL', command=self.input_xCYLTxt)
         xcyl_btn.grid(row=0, column=5, padx=0.5)
 
         productType_lb = Label(producInfo_frame, text='완제품 품명')
@@ -133,7 +139,7 @@ class Bom_register():
         productPrice_e.grid(row=3, column=1, padx=5, pady=3, sticky=W)
         productPic_lb = Label(producInfo_frame, text='완제품 사진')
         productPic_lb.grid(row=4, column=0, padx=1, pady=5)
-        productPic_txt = Label(producInfo_frame, text='없음')
+        productPic_txt = Label(producInfo_frame)
         productPic_txt.grid(row=4, column=1, padx=1, pady=5, sticky=W)
         addPic_btn = Button(producInfo_frame, text='사진 첨부')
         addPic_btn.grid(row=4, column=1, padx=2, pady=5)
@@ -168,7 +174,7 @@ class Bom_register():
 
         empty_lb4 = Label(materialInfo_frame, text='     ')
         empty_lb4.grid(row=1, column=4)
-        componenteInfoClear_btn = Button(materialInfo_frame, text=' 소재 정보 \nClear')
+        componenteInfoClear_btn = Button(materialInfo_frame, text=' 소재 정보 \nClear', command=self.componenteInfoClear)
         componenteInfoClear_btn.grid(row=1, column=5, padx=7, pady=7, rowspan=2)
 
         # 버튼frmae
@@ -210,6 +216,23 @@ class Bom_register():
         tree_frame.place(x=10, y=70, width=870, height=530)
 
     def initialDB(self):
+        # <초기화>
+        bomDate_e.delete(0,END)
+        bomCurrent_cmb.set('')
+        bomExRate_e.delete(0,END)
+        productSpec_e.delete(0,END)
+        productType_cmb.set('')
+        productPrice_e.delete(0,END)
+        material_cmb.set('')
+        materialBuyDate_cmb.set('')
+        shank_cmb.set('')
+        shankBuyDate_cmb.set('')
+        etc_cmb.set('')
+        etcBuyDate_cmb.set('')
+        innerRight_frame.grid_forget()
+        innerRight_frame.grid(row=0, column=1, padx=10)
+
+
         conn = sqlite3.connect('BOM.db')
         conn.execute("PRAGMA foreign_keys = 1")
         cur = conn.cursor()
@@ -230,7 +253,6 @@ class Bom_register():
                 no = int(rs[-1][0]) + 1
                 productSerial_txt.configure(text=f'SJD-1-{no}')
 
-
         # <기본정보-통화 cmb 리스트>
         list_table = cur.execute('''
                        select name from sqlite_master where type='table' and name='vendor'
@@ -244,7 +266,6 @@ class Bom_register():
                 if row[2] not in current_opt :
                     current_opt.append(row[2])
             bomCurrent_cmb.configure(values=current_opt)
-
 
         # <소재정보-원석,원석구매일자 cmb 리스트>
         list_table = cur.execute('''
@@ -278,9 +299,9 @@ class Bom_register():
                         # 원석구매일자cmb opt
                         warehousedFilter_db = cur.execute('select * from warehoused_list where material_id=?', (searched_id,)).fetchall()
                         if warehousedFilter_db != [] :
-                            if warehousedFilter_db[0][7] not in materialBuyDate_opt :
-                                materialBuyDate_opt.append(warehousedFilter_db[0][7])
-
+                            for i in warehousedFilter_db :
+                                if i[7] not in materialBuyDate_opt :
+                                    materialBuyDate_opt.append(i[7])
                     elif row[4] == "샹크" :
                         # 샹크cmb opt
                         if row[1] not in shank_opt :
@@ -289,9 +310,9 @@ class Bom_register():
                         warehousedFilter_db = cur.execute('select * from warehoused_list where material_id=?',
                                                           (searched_id,)).fetchall()
                         if warehousedFilter_db != []:
-                            if warehousedFilter_db[0][7] not in shankBuyDate_opt:
-                                shankBuyDate_opt.append(warehousedFilter_db[0][7])
-
+                            for i in warehousedFilter_db :
+                                if i[7] not in shankBuyDate_opt:
+                                    shankBuyDate_opt.append(i[7])
                     elif row[4] == "기타" :
                         # 기타cmb opt
                         if row[1] not in etc_opt :
@@ -300,8 +321,9 @@ class Bom_register():
                         warehousedFilter_db = cur.execute('select * from warehoused_list where material_id=?',
                                                           (searched_id,)).fetchall()
                         if warehousedFilter_db != []:
-                            if warehousedFilter_db[0][7] not in etcBuyDate_opt:
-                                etcBuyDate_opt.append(warehousedFilter_db[0][7])
+                            for i in warehousedFilter_db :
+                                if i[7] not in etcBuyDate_opt:
+                                    etcBuyDate_opt.append(i[7])
 
                 material_cmb.configure(values = material_opt)
                 shank_cmb.configure(values=shank_opt)
@@ -310,6 +332,22 @@ class Bom_register():
                 shankBuyDate_cmb.configure(values=shankBuyDate_opt)
                 etcBuyDate_cmb.configure(values=etcBuyDate_opt)
 
+        # <완제품 사진 유무 체크>
+        global picture_dir, current_dir, product_sn
+        product_sn = productSerial_txt.cget('text')
+        current_dir = os.getcwd()
+        picture_dir = current_dir + f'\\document\\product_picture\\{product_sn}'
+
+        self.check_productPic()
+
+
+    def check_productPic(self): # 완제품 사진 유무 체크
+        if os.path.exists(picture_dir + '\\') == True:
+            productPic_txt.configure(text='있음', background='#6B66FF', fg='#FFFFFF')
+        else:
+            productPic_txt.configure(text='없음', background='#000000', fg='#FFFFFF')
+
+
 
     def create_tree_widget(self):
         columns = ('sn_col', 'name_col', 'namecode_eng_col', 'namecode_kor_col', 'material_kind_col', 'hscode_col',
@@ -317,3 +355,35 @@ class Bom_register():
                    'exchange_col', 'price_col', 'current_col', 'total_price_col', 'document_col',
                    'purchase_doc_valid_col',
                    'origin_doc_valid_col', 'btn_col')
+
+
+    ##################### 버튼 클릭 함수 #####################
+
+    def input_today(self): # 오늘날짜 입력(T) 버튼
+        today = datetime.today().strftime('%Y-%m-%d')
+        bomDate_e.delete(0, END)
+        bomDate_e.insert(0, today)
+    def basicInfoClear(self): # 기본정보 Clear 버튼
+        bomDate_e.delete(0, END)
+        bomCurrent_cmb.set("")
+        bomExRate_e.delete(0, END)
+    def componenteInfoClear(self): # 소재정보 Clear 버튼
+        material_cmb.set("")
+        materialBuyDate_cmb.set("")
+        shank_cmb.set("")
+        shankBuyDate_cmb.set("")
+        etc_cmb.set("")
+        etcBuyDate_cmb.set("")
+
+    def input_angleTxt(self):
+        productSpec_e.insert(END, "˚")
+    def input_micronTxt(self):
+        productSpec_e.insert(END, "㎛")
+    def input_xTxt(self):
+        productSpec_e.insert(END, "×")
+    def input_pieTxt(self):
+        productSpec_e.insert(END, "Ø")
+    def input_xCONTxt(self):
+        productSpec_e.insert(END, "×CON")
+    def input_xCYLTxt(self):
+        productSpec_e.insert(END, "×CYL")
