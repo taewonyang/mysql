@@ -21,6 +21,9 @@ class Material_Info :
                 kind_txt.configure(text='원석')
             elif namecode_eng_cmb.get() == "SHANK":
                 namecode_kor_txt.configure(text='샹크')
+                kind_txt.configure(text='샹크')
+            elif namecode_eng_cmb.get() == "Etc":
+                namecode_kor_txt.configure(text='기타')
                 kind_txt.configure(text='기타')
 
         def selectedText(event):
@@ -48,7 +51,7 @@ class Material_Info :
         name_e.place(x=120, y=60)
         namecode_eng_lb = Label(self.window, text='원자재 품명(영문)')
         namecode_eng_lb.place(x=10, y=90)
-        namecode_eng_cmb = ttk.Combobox(self.window, height=3, width=8, values=['SCD','PCD','SHANK'], state='readonly')
+        namecode_eng_cmb = ttk.Combobox(self.window, height=4, width=8, values=['SCD','PCD','SHANK','Etc'], state='readonly')
         namecode_eng_cmb.place(x=120, y=90)
         namecode_kor_lb = Label(self.window, text='원자재 품명(국문)')
         namecode_kor_lb.place(x=10, y=120)

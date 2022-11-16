@@ -265,15 +265,15 @@ class Warehousing_window():
                         ''').fetchall()
         if list_table == []:
             print('warehoused_list 테이블이 없습니다.')
-            sn_txt.configure(text=f'SJD-1')
+            sn_txt.configure(text=f'SJD-3-1')
         else :
             cur.execute('select * from warehoused_list')
             rs = cur.fetchall()
             if rs == [] :
-                sn_txt.configure(text=f'SJD-1')
+                sn_txt.configure(text=f'SJD-3-1')
             else :
                 no = int(rs[-1][0]) + 1
-                sn_txt.configure(text=f'SJD-{no}')
+                sn_txt.configure(text=f'SJD-3-{no}')
 
         global purchase_dir, origin_dir, current_dir, sn
         sn = sn_txt.cget('text')

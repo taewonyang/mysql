@@ -17,6 +17,7 @@ class Bom_register():
 
         def calView(self) : #캘린더 view
             global cal1, DateSel_btn, calForget_btn
+            innerRight_frame.grid(row=0, column=1, padx=10)
             cal1 = Calendar(innerRight_frame, selectmode='day')
             cal1.grid(row=0, column=0, padx=3, pady=5)
 
@@ -34,16 +35,18 @@ class Bom_register():
             cal1.grid_forget()
             DateSel_btn.grid_forget()
             calForget_btn.grid_forget()
+            innerRight_frame.grid_forget()
 
         def forget_cal() : #달력 숨기기
             cal1.grid_forget()
             DateSel_btn.grid_forget()
             calForget_btn.grid_forget()
+            innerRight_frame.grid_forget()
 
         bomDate_e.bind("<Button-1>", calView)
 
     def layout(self):
-        global bomDate_e, innerRight_frame, bomCurrent_cmb
+        global bomDate_e, innerRight_frame, bomCurrent_cmb, material_cmb, materialBuyDate_cmb, shank_cmb, shankBuyDate_cmb, etc_cmb, etcBuyDate_cmb, productSerial_txt
 
         topFrame = Frame(self.window, width=1500, height=70, bg='#FDFFFF', bd=0.5)
         topFrame.place(x=0, y=0)
@@ -86,8 +89,8 @@ class Bom_register():
         CheckVar1 = IntVar()
         keep_chkbtn = Checkbutton(innerLeft_frame, text="기본 정보(공통)\n입력내용 유지", variable=CheckVar1)
         keep_chkbtn.grid(row=3, column=0, padx=7, pady=7)
-        clear_btn = Button(innerLeft_frame, text=' 기본 정보 \nClear')
-        clear_btn.grid(row=3, column=1, padx=7, pady=7)
+        basicInfoClear_btn = Button(innerLeft_frame, text=' 기본 정보 \nClear')
+        basicInfoClear_btn.grid(row=3, column=1, padx=7, pady=7)
 
 
         # -세부정보-
@@ -122,7 +125,7 @@ class Bom_register():
 
         productType_lb = Label(producInfo_frame, text='완제품 품명')
         productType_lb.grid(row=2, column=0, padx=5, pady=3)
-        productType_cmb = ttk.Combobox(producInfo_frame, height=3, width=10, state='readonly')
+        productType_cmb = ttk.Combobox(producInfo_frame, height=3, width=10, values= ['SCD TOOL', 'PCD TOOL'], state='readonly')
         productType_cmb.grid(row=2, column=1, padx=5, pady=3, sticky=W)
         productPrice_lb = Label(producInfo_frame, text='완제품 가격')
         productPrice_lb.grid(row=3,column=0, padx=5, pady=3)
@@ -154,7 +157,6 @@ class Bom_register():
         shankBuyDate_lb.grid(row=1, column=2, padx=5, pady=3)
         shankBuyDate_cmb = ttk.Combobox(materialInfo_frame, height=5, width=12, state='readonly')
         shankBuyDate_cmb.grid(row=1, column=3, padx=5, pady=3)
-
         etc_lb = Label(materialInfo_frame, text='etc')
         etc_lb.grid(row=2, column=0, padx=5, pady=3)
         etc_cmb = ttk.Combobox(materialInfo_frame, height=5, width=15, state='readonly')
@@ -163,6 +165,11 @@ class Bom_register():
         etcBuyDate_lb.grid(row=2, column=2, padx=5, pady=3)
         etcBuyDate_cmb = ttk.Combobox(materialInfo_frame, height=5, width=12, state='readonly')
         etcBuyDate_cmb.grid(row=2, column=3, padx=5, pady=3)
+
+        empty_lb4 = Label(materialInfo_frame, text='     ')
+        empty_lb4.grid(row=1, column=4)
+        componenteInfoClear_btn = Button(materialInfo_frame, text=' 소재 정보 \nClear')
+        componenteInfoClear_btn.grid(row=1, column=5, padx=7, pady=7, rowspan=2)
 
         # 버튼frmae
         dataBtn_frame = Frame(leftFrame)
@@ -207,19 +214,101 @@ class Bom_register():
         conn.execute("PRAGMA foreign_keys = 1")
         cur = conn.cursor()
 
-        # <기본정보-통화 데이터 뿌려주기>
+        # <세부내역-완제품 품번>
+        list_table = cur.execute('''
+                                select name from sqlite_master where type='table' and name='bom_list'
+                                ''').fetchall()
+        if list_table == []:
+            print('bom_list 테이블이 없습니다.')
+            productSerial_txt.configure(text=f'SJD-1-1')
+        else :
+            cur.execute('select * from bom_list')
+            rs = cur.fetchall()
+            if rs == []:
+                productSerial_txt.configure(text=f'SJD-1-1')
+            else:
+                no = int(rs[-1][0]) + 1
+                productSerial_txt.configure(text=f'SJD-1-{no}')
+
+
+        # <기본정보-통화 cmb 리스트>
         list_table = cur.execute('''
                        select name from sqlite_master where type='table' and name='vendor'
                        ''').fetchall()
         if list_table == []:
-            print('material_info 테이블이 없습니다.')
+            print('vendor 테이블이 없습니다.')
         else:
             current_db = cur.execute('select * from vendor').fetchall()
             current_opt = []
             for row in current_db :
-                if row in current_opt :
-                current_opt.append(row[2])
+                if row[2] not in current_opt :
+                    current_opt.append(row[2])
             bomCurrent_cmb.configure(values=current_opt)
+
+
+        # <소재정보-원석,원석구매일자 cmb 리스트>
+        list_table = cur.execute('''
+                        select name from sqlite_master where type='table' and name='warehoused_list'
+                                                           ''').fetchall()
+        if list_table == []:
+            print('warehoused_list 테이블이 없습니다.')
+        else:
+            list_table = cur.execute('''
+                            select name from sqlite_master where type='table' and name='material_info'
+                                                                       ''').fetchall()
+            if list_table == []:
+                print('material_info 테이블이 없습니다.')
+            else :
+                material_db = cur.execute('select * from material_info').fetchall()
+                material_opt = []
+                shank_opt= []
+                etc_opt = []
+                materialBuyDate_opt = []
+                shankBuyDate_opt = []
+                etcBuyDate_opt = []
+
+                for row in material_db:
+                    # print(row) : (1, 'MXPL3010', 'SCD', '단결정 다이아몬드', '원석', '8512.22')
+                    searched_id = int(row[0])
+
+                    if row[4] == '원석' :
+                        # 원석cmb opt
+                        if row[1] not in material_opt :
+                            material_opt.append(row[1])
+                        # 원석구매일자cmb opt
+                        warehousedFilter_db = cur.execute('select * from warehoused_list where material_id=?', (searched_id,)).fetchall()
+                        if warehousedFilter_db != [] :
+                            if warehousedFilter_db[0][7] not in materialBuyDate_opt :
+                                materialBuyDate_opt.append(warehousedFilter_db[0][7])
+
+                    elif row[4] == "샹크" :
+                        # 샹크cmb opt
+                        if row[1] not in shank_opt :
+                            shank_opt.append(row[1])
+                        # 샹크구매일자cmb opt
+                        warehousedFilter_db = cur.execute('select * from warehoused_list where material_id=?',
+                                                          (searched_id,)).fetchall()
+                        if warehousedFilter_db != []:
+                            if warehousedFilter_db[0][7] not in shankBuyDate_opt:
+                                shankBuyDate_opt.append(warehousedFilter_db[0][7])
+
+                    elif row[4] == "기타" :
+                        # 기타cmb opt
+                        if row[1] not in etc_opt :
+                            etc_opt.append(row[1])
+                        # 기타구매일자cmb opt
+                        warehousedFilter_db = cur.execute('select * from warehoused_list where material_id=?',
+                                                          (searched_id,)).fetchall()
+                        if warehousedFilter_db != []:
+                            if warehousedFilter_db[0][7] not in etcBuyDate_opt:
+                                etcBuyDate_opt.append(warehousedFilter_db[0][7])
+
+                material_cmb.configure(values = material_opt)
+                shank_cmb.configure(values=shank_opt)
+                etc_cmb.configure(values=etc_opt)
+                materialBuyDate_cmb.configure(values=materialBuyDate_opt)
+                shankBuyDate_cmb.configure(values=shankBuyDate_opt)
+                etcBuyDate_cmb.configure(values=etcBuyDate_opt)
 
 
     def create_tree_widget(self):
