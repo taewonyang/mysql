@@ -765,6 +765,7 @@ class Warehousing_window():
                     conn.close()
 
                     self.tree_data_view()
+                    self.initialDB()
                 else :
                     return
 

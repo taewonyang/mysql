@@ -1,10 +1,12 @@
 from tkinter import *
 import tkinter.ttk as ttk
 import tkinter.messagebox as msgbox
+from tkinter import filedialog
 import sqlite3
 from tkcalendar import Calendar
 from datetime import datetime
 import os
+import shutil
 
 class Bom_register():
     def __init__(self, window):
@@ -47,19 +49,28 @@ class Bom_register():
         bomDate_e.bind("<Button-1>", calView)
 
 
-        # <완제품사진 폴더 열기>
-        ################################# ################
+        # <완제품사진 첨부폴더 열기>
+        def picture_open_folder(self):
+            if productPic_txt.cget('text') == '없음':
+                msgbox.showinfo('No file', '첨부된 완제품의 사진 파일이 없습니다.')
+            else:
+                msgbox.showinfo('첨부파일 열기', '완제품 사진 폴더를 오픈하였습니다. 첨부파일을 확인하세요.')
+                # serial = productPic_txt.cget('text')
+                # picture_dir = current_dir + f'\\document\\product_picture\\{product_sn}'
+                path = os.path.realpath(picture_dir)
+                os.startfile(path)
 
+        productPic_txt.bind("<Double-Button-1>", picture_open_folder)
 
 
     def layout(self):
-        global innerRight_frame, productSerial_txt, productPic_txt
+        global innerRight_frame, productSerial_txt, productPic_txt, addPic_btn
         global bomDate_e, bomCurrent_cmb, bomExRate_e, productSpec_e, productType_cmb, productPrice_e, material_cmb, materialBuyDate_cmb, shank_cmb, shankBuyDate_cmb, etc_cmb, etcBuyDate_cmb
         topFrame = Frame(self.window, width=1500, height=70, bg='#FDFFFF', bd=0.5)
         topFrame.place(x=0, y=0)
         leftFrame = Frame(self.window, width=605, height=680, relief='solid', bd=0.5)
         leftFrame.place(x=5, y=70)
-        rightFrame = Frame(self.window, width=885, height=675, relief='solid', bd=0.5)
+        rightFrame = Frame(self.window, width=885, height=660, relief='solid', bd=0.5)
         rightFrame.place(x=610, y=70)
 
         # topFrame내용
@@ -71,7 +82,8 @@ class Bom_register():
         # leftFrame내용
         # -기본 정보(공통)-
         bomInfo_frame = LabelFrame(leftFrame, text='기본 정보(공통)', labelanchor=N)
-        bomInfo_frame.pack(fill='both', expand=True, padx=10, pady=10)
+        bomInfo_frame.grid(row=0,column=0)
+        # bomInfo_frame.pack(fill='both', expand=True, padx=10, pady=10)
         innerLeft_frame = Frame(bomInfo_frame)
         innerLeft_frame.grid(row=0, column=0, padx=10)
         innerRight_frame = Frame(bomInfo_frame, height=176)
@@ -101,7 +113,8 @@ class Bom_register():
 
         # -세부정보-
         detailInfo_frame = LabelFrame(leftFrame, text='세부 내용', labelanchor=N)
-        detailInfo_frame.pack(fill='both', expand=True, padx=10, pady=15)
+        # detailInfo_frame.pack(fill='both', expand=True, padx=10, pady=15)
+        detailInfo_frame.grid(row=1, column=0)
         #제품정보
         producInfo_frame = LabelFrame(detailInfo_frame, text='제품 정보')
         producInfo_frame.grid(row=0, column=0, padx=5, pady=10)
@@ -141,7 +154,7 @@ class Bom_register():
         productPic_lb.grid(row=4, column=0, padx=1, pady=5)
         productPic_txt = Label(producInfo_frame)
         productPic_txt.grid(row=4, column=1, padx=1, pady=5, sticky=W)
-        addPic_btn = Button(producInfo_frame, text='사진 첨부')
+        addPic_btn = Button(producInfo_frame, text='사진 첨부', command=self.open_attachWin)
         addPic_btn.grid(row=4, column=1, padx=2, pady=5)
 
         #소재정보
@@ -179,29 +192,31 @@ class Bom_register():
 
         # 버튼frmae
         dataBtn_frame = Frame(leftFrame)
-        dataBtn_frame.pack( fill='both', expand=True, padx=10, pady=10)
+        dataBtn_frame.grid(row=3, column=0)
+        # dataBtn_frame.pack(fill='both', expand=True, padx=10, pady=10)
 
         empty_lb1 = Label(dataBtn_frame, text='     ')
         empty_lb1.grid(row=0,column=0, padx=10, pady=3)
         empty_lb2 = Label(dataBtn_frame, text='     ')
         empty_lb2.grid(row=0, column=1, padx=10, pady=3)
-        empty_lb3 = Label(dataBtn_frame, text='     ')
-        empty_lb3.grid(row=0, column=2, padx=10, pady=3)
         new_frame = LabelFrame(dataBtn_frame, text='신규등록')
-        new_frame.grid(row=0, column=3, padx=10, pady=3)
+        new_frame.grid(row=0, column=2, padx=10, pady=3)
         db_insert_btn = Button(new_frame, text='  Save  ')
         db_insert_btn.grid(row=0, column=0, padx=1, pady=3)
 
         existing_Frame = LabelFrame(dataBtn_frame, text='기존데이터')
-        existing_Frame.grid(row=0, column=4, padx=10, pady=3)
+        existing_Frame.grid(row=0, column=3, padx=10, pady=3)
         btn_dataload_btn = Button(existing_Frame, text=' Load ')
         btn_dataload_btn.grid(row=0, column=0, padx=1, pady=3)
-        cancel_btn = Button(existing_Frame, text='Cancel')
-        cancel_btn.grid(row=0, column=1, padx=1, pady=3)
         db_delete_btn = Button(existing_Frame, text='  Del  ', fg='#FF0000')
         db_delete_btn.grid(row=0, column=2, padx=9, pady=3)
         db_edit_btn = Button(existing_Frame, text=' Update ')
         db_edit_btn.grid(row=0, column=3, padx=1, pady=3)
+
+        empty_lb3 = Label(dataBtn_frame, text='     ')
+        empty_lb3.grid(row=0, column=4, padx=10, pady=3)
+        allClear_btn = Button(dataBtn_frame, text=' ALL \n Clear ')
+        allClear_btn.grid(row=0, column=5, padx=10, pady=3)
 
         # rightFrame 내용
         global tree_frame
@@ -212,8 +227,9 @@ class Bom_register():
         bomDate_cmb.place(x=80, y=20)
         bomDateView_btn = Button(rightFrame, text='조회')
         bomDateView_btn.place(x=210, y=15)
-        tree_frame = Frame(rightFrame, bg='blue')
+        tree_frame = Frame(rightFrame)
         tree_frame.place(x=10, y=70, width=870, height=530)
+
 
     def initialDB(self):
         # <초기화>
@@ -332,30 +348,21 @@ class Bom_register():
                 shankBuyDate_cmb.configure(values=shankBuyDate_opt)
                 etcBuyDate_cmb.configure(values=etcBuyDate_opt)
 
-        # <완제품 사진 유무 체크>
+
+        # <첨부파일 폴더경로>
         global picture_dir, current_dir, product_sn
         product_sn = productSerial_txt.cget('text')
         current_dir = os.getcwd()
         picture_dir = current_dir + f'\\document\\product_picture\\{product_sn}'
 
+        # <완제품 사진 유무 체크>
         self.check_productPic()
-
 
     def check_productPic(self): # 완제품 사진 유무 체크
         if os.path.exists(picture_dir + '\\') == True:
             productPic_txt.configure(text='있음', background='#6B66FF', fg='#FFFFFF')
         else:
             productPic_txt.configure(text='없음', background='#000000', fg='#FFFFFF')
-
-
-
-    def create_tree_widget(self):
-        columns = ('sn_col', 'name_col', 'namecode_eng_col', 'namecode_kor_col', 'material_kind_col', 'hscode_col',
-                   'amount_col', 'ekw_col', 'manufacturer_col', 'country_origin_col', 'vendor_name_col', 'buydate_col',
-                   'exchange_col', 'price_col', 'current_col', 'total_price_col', 'document_col',
-                   'purchase_doc_valid_col',
-                   'origin_doc_valid_col', 'btn_col')
-
 
     ##################### 버튼 클릭 함수 #####################
 
@@ -364,6 +371,7 @@ class Bom_register():
         bomDate_e.delete(0, END)
         bomDate_e.insert(0, today)
     def basicInfoClear(self): # 기본정보 Clear 버튼
+        innerRight_frame.grid_forget()
         bomDate_e.delete(0, END)
         bomCurrent_cmb.set("")
         bomExRate_e.delete(0, END)
@@ -387,3 +395,92 @@ class Bom_register():
         productSpec_e.insert(END, "×CON")
     def input_xCYLTxt(self):
         productSpec_e.insert(END, "×CYL")
+
+    ##################### 파일첨부 화면 #####################
+    # 완제품사진 첨부 윈도우 오픈
+    def open_attachWin(self):
+        global path_e, save_btn, saveFile_win, cancel_btn
+        # Layout
+        saveFile_win = Toplevel()
+        saveFile_win.title('완제품 사진 파일첨부')
+        saveFile_win.resizable(False, False)
+        row1 = Label(saveFile_win, pady=7)
+        row1.pack()
+        Label(row1, text='File Name', font=("Georgia", 11)).pack(side='left', padx=3, pady=5)
+        path_e = Entry(row1, width=40)
+        path_e.pack(side='left', padx=3, pady=5, ipady=2)
+        Button(row1, text='파일선택', font=("Georgia", 11), command=self.open_file).pack(side='left', padx=3, pady=5)
+        row2 = Label(saveFile_win, pady=7)
+        row2.pack()
+        save_btn = Button(row2, text='파일 저장', font=("Georgia", 11), command=self.save_file)
+        save_btn.pack(side='left', padx=5, pady=5)
+        cancel_btn = Button(row2, text='취소', font=("Georgia", 11), command=self.cancel_attache_win)
+        cancel_btn.pack(side='left', padx=5, pady=5)
+
+    def open_file(self):
+        global file, filename
+        file = filedialog.askopenfilename(title='파일을 선택하세요',
+                                          filetypes=(("JPG 파일", "*.jpg"), ("PDF 파일", "*.pdf"),
+                                                     ("All files", "*.*")))
+        filename = file.split('/')[-1]
+        if filename == "":
+            return
+        else:
+            path_e.delete(0, END)
+            path_e.insert(0, filename)
+
+    def save_file(self):
+        file_path = picture_dir + '\\' + filename
+        print('file_path')
+        print(file_path)
+        print('==============')
+        if os.path.exists(file_path) == True:
+            print('중복값존재')
+            response = msgbox.askyesno('예/아니오', '해당파일이 존재합니다.\n덮어쓰기를 실행할까요?')
+            if response == 1:
+                shutil.copyfile(file, file_path)
+                msgbox.showinfo('파일저장 완료!', '기존파일을 덮어쓰기하였습니다.')
+                saveFile_win.destroy()
+            else:
+                print('덮어쓰기x, 복사x')
+                pass
+        elif os.path.exists(picture_dir) == True:
+            print('picture_dir\sn폴더 까지 존재')
+            shutil.copyfile(file, file_path)
+            msgbox.showinfo('파일저장 완료!', '파일첨부를 완료했습니다.')
+            saveFile_win.destroy()
+        elif os.path.exists(current_dir + f'\\document\\product_picture') == True:
+            print('picture_dir 폴더까지 존재')
+            os.mkdir(picture_dir)
+            shutil.copyfile(file, file_path)
+            msgbox.showinfo('파일저장 완료!', '파일첨부를 완료했습니다.')
+            saveFile_win.destroy()
+        elif os.path.exists(current_dir + '\\document') == True:
+            print('document폴더까지만 존재')
+            os.mkdir(current_dir + '\\document\\product_picture')
+            os.mkdir(picture_dir)
+            shutil.copyfile(file, file_path)
+            msgbox.showinfo('파일저장 완료!', '파일첨부를 완료했습니다.')
+            saveFile_win.destroy()
+        else:
+            print('document폴더 없음->생성')
+            os.mkdir(current_dir + '\\document')
+            os.mkdir(current_dir + '\\document\\product_picture')
+            os.mkdir(picture_dir)
+            shutil.copyfile(file, file_path)
+            msgbox.showinfo('파일저장 완료!', '파일첨부를 완료했습니다.')
+            saveFile_win.destroy()
+        self.check_productPic()
+
+    def cancel_attache_win(self):
+        saveFile_win.destroy()
+
+
+    #####################  BOM 조회 트리뷰  ######################
+
+    def create_tree_widget(self):
+        columns = ('sn_col', 'name_col', 'namecode_eng_col', 'namecode_kor_col', 'material_kind_col', 'hscode_col',
+                   'amount_col', 'ekw_col', 'manufacturer_col', 'country_origin_col', 'vendor_name_col', 'buydate_col',
+                   'exchange_col', 'price_col', 'current_col', 'total_price_col', 'document_col',
+                   'purchase_doc_valid_col',
+                   'origin_doc_valid_col', 'btn_col')
